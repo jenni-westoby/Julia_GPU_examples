@@ -18,7 +18,7 @@ c = similar(a)
 
 #Allocate memory for a and b on device stream 1
 buf_a1 = Mem.alloc(sizeof(Float32))
-buf_b2 = Mem.alloc(sizeof(Float32))
+buf_b1 = Mem.alloc(sizeof(Float32))
 
 #Allocate memory for a and b on device stream 2
 buf_a2 = Mem.alloc(sizeof(Float32))
@@ -29,23 +29,40 @@ d_c1 = Mem.alloc(sizeof(Float32))
 d_c2 = Mem.alloc(sizeof(Float32))
 
 #Make streams
-s1 = CuStream().handle
+s1 = CuStream()
 s2 = CuStream()
 
+
 #Iterate over arrays in increments of 2
-for i in 1:dims
+for i in 1:2:dims
 
-    #Asynchronously copy a[i] and b[i] onto device
-    Mem.upload!(buf_a1, a[i], async = true, stream = s1)
-    Mem.upload!(buf_b1, b[i], async = true, stream = s1)
+    #Asynchronously copy a[i] and b[i] onto device using first stream
+    Mem.upload!(buf_a1, Ref(a, i), sizeof(Float32), s1, async = true)
+    Mem.upload!(buf_b1, Ref(b, i), sizeof(Float32), s1, async = true)
 
+    #Call vadd to run on gpu
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a1, buf_b1, d_c1,
     threads = 1, stream = s1)
 
     #Asynchronously copy c back to host
-    Mem.download!(c[i], d_c, async = true, stream = s1)
+    Mem.download!(Ref(c, i), d_c1, sizeof(Float32), s1, async = true)
+
+    #Now, copy a[i+1] and b[i+1] onto device in second stream
+    Mem.upload!(buf_a2, Ref(a, i+1), sizeof(Float32), s2, async = true)
+    Mem.upload!(buf_b2, Ref(b, i+1), sizeof(Float32), s2, async = true)
+
+    #Call vadd to run on gpu in second stream
+    cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a2, buf_b2, d_c2,
+    threads = 1, stream = s2)
+
+    #Asynchronously copy c back to host in the second stream
+    Mem.download!(Ref(c, i+1), d_c2, sizeof(Float32), s2, async = true)
 
 end
+
+@show a[1:3]
+@show b[1:3]
+@show c[1:3]
 
 #Check it worked
 @test a+b ≈ c
