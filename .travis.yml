@@ -4,5 +4,5 @@ jobs:
       julia: 1.0
       os: linux
       script:
-        - /home/jenni/julia-1.0.3/bin/julia --project=docs/ docs/make.jl
+        - julia --project=docs/ docs/make.jl
       after_success: skip
