@@ -4,7 +4,5 @@ jobs:
       julia: 1.0
       os: linux
       script:
-        - $HOME/julia-1.0.3/bin/julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
-                                               Pkg.instantiate()'
-        - $HOME/julia-1.0.3/bin/julia --project=docs/ docs/make.jl
+        - /home/jenni/julia-1.0.3/bin/julia --project=docs/ docs/make.jl
       after_success: skip
