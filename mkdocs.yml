@@ -30,6 +30,7 @@ pages:
   - An Introduction to Parallelism: Vector_addition.md
   - Shared memory and Synchronisation: Vector_dot_product.md
   - Streaming: Streaming.md
+  - Julia-specific Challenges: Challenges.md
 - Performance:
   - Profiling: Profiling.md
   - Thoughts on Performance: Performance_thoughts.md
