@@ -8,11 +8,11 @@ You basically have three options for accessing GPUs:
 
 ##Option 1
 
-If you are going for option 1, the cloud based platform you are using should have instructions for how to gain access to the GPUs you are paying for. It is quite likely that the cloud based platform will already have the CUDA toolkit and drivers that you need installed, so once you have managed to log in you are probably good to go!
+If you are going for option 1, the cloud based platform you are using should have instructions for how to gain access to the GPUs you are paying for. It is quite likely that the cloud based platform will already have the CUDA toolkit installed, so once you have managed to log in you are probably good to go!
 
 ##Option 2
 
-If you are going for option 2, talk to the HPC administrator to find out how to get access to the GPUs and check that the CUDA toolkit and CUDA drivers are already installed.
+If you are going for option 2, talk to the HPC administrator to find out how to get access to the GPUs and check that the CUDA toolkit are already installed.
 
 ##Option 3
 
@@ -53,6 +53,9 @@ If your install has worked, the final command should print out some version info
 
 **Step 7:** Assuming all of the above worked, install the latest version of Julia and continue working through this tutorial.
 
+**Disclaimer** The above are NOT authoritative instructions on how to install the CUDA toolkit, they are instructions that worked for me. You should visit the NVIDIA website for authoritative instructions.
+
+**Disclaimer** I am writing these instructions in spring 2019. If you are reading this disclaimer and the year is 2021 or greater, these instructions may be woefully out of date and better ignored.
 
 ##Surely I don't really need to install a new operating system
 

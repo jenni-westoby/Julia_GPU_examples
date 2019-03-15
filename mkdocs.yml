@@ -2,6 +2,7 @@ site_name:           Develop GPU Software With Julia
 repo_url:            https://github.com/jenni-westoby/Julia_GPU_examples.git
 site_description:    In this tutorial, I will guide you through the full workflow of writing a basic program in Julia that will run on GPU.
 site_author:         Jenni Westoby
+theme: readthedocs
 
 
 markdown_extensions:
@@ -22,4 +23,16 @@ docs_dir: 'src'
 pages:
 - Introduction: index.md
 - Getting Started:
+  - Some background on GPUs: GPU_background.md
   - Set up your GPU: Accessing_GPUs.md
+  - Set up Julia: Setup_Julia.md
+- Developing with GPUs:
+  - An Introduction to Parallelism: Vector_addition.md
+  - Shared memory and Synchronisation: Vector_dot_product.md
+  - Streaming: Streaming.md
+- Performance:
+  - Profiling: Profiling.md
+  - Thoughts on Performance: Performance_thoughts.md
+- Summary: Summary.md
+- Further Reading: Further_Reading.md
+- About the Author: About_the_author.md

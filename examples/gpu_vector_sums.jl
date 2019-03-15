@@ -2,7 +2,7 @@ using CuArrays, CUDAnative, CUDAdrv
 
 function add!(a,b,c)
     tid = blockIdx().x
-    if (tid <= length(a))
+    if (tid <= min(length(a), length(b), length(c)))
         c[tid] = a[tid] + b[tid]
     end
     return nothing
@@ -28,7 +28,7 @@ function main()
     c=Array(c)
 
     for i in 1:length(a)
-        println(a[i], " + ", b[i], " = ", c[i])
+        @test a[i] + b[i] ≈ c[i]
     end
 end
 
