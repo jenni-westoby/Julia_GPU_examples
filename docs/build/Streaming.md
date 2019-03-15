@@ -1,4 +1,6 @@
 
+<a id='Streaming-1'></a>
+
 # Streaming
 
 
@@ -7,6 +9,8 @@ In CUDA, a stream is a sequence of operations executed in order on a device. We 
 
 It should be noted that Julia's support for streaming in GPU programming is still rudimentary. As you will see, it is easy to stream kernel execution (analysis), but the ideal of streaming both data transfer and analysis is more challenging. Streaming both data transfer and analysis will require us to write much lower level code than is usually seen in Julia. Let's start with the simpler task of streaming our analysis.
 
+
+<a id='Streaming-our-Analysis-1'></a>
 
 # Streaming our Analysis
 
@@ -109,6 +113,8 @@ Hopefully you agree that executing the kernel across two streams was extremely e
 Streaming can really come in to its own when used to stagger data transfer and analysis between streams. This is possible in Julia for GPU applications, but comes with a health warning...
 
 
+<a id='Health-Warning:-Low-Level-Code-Alert-1'></a>
+
 # Health Warning: Low Level Code Alert
 
 
@@ -120,6 +126,8 @@ To acheive speed-up by streaming data transfer, the process of data transfer mus
 
 Unlike CuArrays and CUDAnative, CUDAdrv provides support for asynchronous data transfer. The code in the next example is very analogous to CUDA C or C++ code and the example below does in fact include a (very short) CUDA C script. In practice, this means we will have to think about memory management more than previously and our code will be less pretty. If you have never written code in a lower level language like C, you may struggle to follow the next section. If you are struggling, do not panic and just move on to the next section. In practice, you can often speed up your code a lot by porting to GPU without using streams.
 
+
+<a id='Streaming-Data-Transfer-and-Analysis-1'></a>
 
 # Streaming Data Transfer and Analysis
 
@@ -398,6 +406,8 @@ This example demonstrates that it is possible to stream data transfer and analys
 
 In the next section, we will consider some Julia specific aspects of writing GPU compatible software.
 
+
+<a id='References-1'></a>
 
 # References
 

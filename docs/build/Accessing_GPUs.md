@@ -1,7 +1,7 @@
 
 <a id='Accessing-GPUs-1'></a>
 
-#  Accessing GPUs
+# Accessing GPUs
 
 
 You basically have three options for accessing GPUs:
@@ -12,17 +12,23 @@ You basically have three options for accessing GPUs:
 3. Use the GPU in your own computer
 
 
+<a id='Option-1-1'></a>
+
 # Option 1
 
 
 If you are going for option 1, the cloud based platform you are using should have instructions for how to gain access to the GPUs you are paying for. It is quite likely that the cloud based platform will already have the CUDA toolkit installed, so once you have managed to log in you are probably good to go!
 
 
+<a id='Option-2-1'></a>
+
 # Option 2
 
 
 If you are going for option 2, talk to the HPC administrator to find out how to get access to the GPUs and check that the CUDA toolkit are already installed.
 
+
+<a id='Option-3-1'></a>
 
 # Option 3
 
@@ -80,6 +86,8 @@ If your install has worked, the final command should print out some version info
 
 **Disclaimer** I am writing these instructions in spring 2019. If you are reading this disclaimer and the year is 2021 or greater, these instructions may be woefully out of date and better ignored.
 
+
+<a id='Surely-I-don't-really-need-to-install-a-new-operating-system-1'></a>
 
 # Surely I don't really need to install a new operating system
 

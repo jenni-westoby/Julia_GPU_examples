@@ -1,9 +1,5 @@
 
-# Health Warning: Types
-
-
-The vector addition example in the previous section was written in fairly high level code. We didn't have to think about memory allocation or even types. As we move on to more involved examples in this section and beyond, this is increasingly going to change. Julia has an optional types system, which in normal Julia usage often means that in practice you can ignore that types exist. It is often not possible to ignore types in Julia GPU programming. If you are a bit hazy about what types are, I recommend doing a bit of background reading from the Julia manual before proceeding. I will assume you know what types are here.
-
+<a id='Shared-Memory-and-Synchronisation-1'></a>
 
 # Shared Memory and Synchronisation
 
@@ -14,13 +10,13 @@ Following our example of vector addition in the previous section, you may be lef
 You may recall from "Some Background on GPUs" that GPUs are composed of grids of blocks, where each block contains threads.
 
 
-Put a pretty picture here.
+![](images/grid_threads_blocks.png)
 
 
 In addition to threads, each block contains 'shared memory'. Shared memory is memory which can be read and written to by all the threads in a given block. Shared memory can't be accessed by threads not in the specified block. This is illustrated in the diagram below.
 
 
-![alt text](images/gpu_memory_layout.png)
+![](images/gpu_memory_layout.png)
 
 
 In the code we wrote for vector addition, we did not use shared memory. Instead we used global memory. Global memory can be accessed from all threads, regardless of what block they live in, but has the disadvantage of taking a lot longer to read from compared with shared memory. There are two main reasons we might use shared memory in a program:
@@ -32,6 +28,8 @@ In the code we wrote for vector addition, we did not use shared memory. Instead 
 
 Of course, there is an obvious potential disadvantage to using shared memory. Giving multiple threads the capability to read and write from the same memory is potentially powerful. However it is also potentially dangerous. Now it is possible for threads to try to write to the same location in memory simultaneously. If we want there to be a dependency between threads, where thread A reads the results written by thread B, there is no automatic guarantee that thread A will not try to read the results before thread B has written them. We need a method to synchronise threads so this type of situation can be avoided. Fortunately, such a method exists as part of CUDAnative.
 
+
+<a id='Vector-Dot-Product-1'></a>
 
 # Vector Dot Product
 
@@ -131,7 +129,7 @@ This is the first time we've mixed up thread and block indexes in the same kerne
 The aim of this line of code is to generate a unique thread index for each thread. `threadIdx().x` gives the index for the current thread inside the current block. So `threadIdx().x` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so `threadIdx().x = 1`), a second thread with the index 2 (`threadIdx().x = 2`) and so on, so we need a different approach to generate a unique thread index. `blockDim().x` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index (`blockIdx().x`) and the number of threads in a block (`blockDim().x`), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (`threadIdx().x`) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.
 
 
-Pretty picture
+![](images/GPU_tid.png)
 
 
 A final thing to note is that we subtract one from `threadIdx().x` and `blockIdx().x`. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do you best to ignore them.
@@ -177,103 +175,103 @@ In the next step of the kernel, we want to sum up all the values stored in share
 
 
 ```
- cache[cacheIndex + 1] = temp
- ```
+cache[cacheIndex + 1] = temp
+```
+
 
 Doesn't mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:
 
-```
-
-
-# synchronise threads sync_threads()
-
 
 ```
+# synchronise threads
+sync_threads()
+```
+
 
 When each thread reaches this line, it pauses in its execution of the kernel until all of the threads in that block have reached the same place. Then, the threads restart again.
 
+
 Now all the threads have written to shared memory, we are ready to sum the elements of cache:
 
+
+```
+# In the step below, we add up all of the values stored in the cache
+i::Int = blockDim().x/2
+while i!=0
+    if cacheIndex < i
+        cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
+    end
+    sync_threads()
+    i/=2
+end
 ```
 
 
-# In the step below, we add up all of the values stored in the cache i::Int = blockDim().x/2 while i!=0     if cacheIndex < i         cache[cacheIndex + 1] += cache[cacheIndex + i + 1]     end     sync_threads()     i/=2 end
+Here, we initialise `i` as half of the total number of threads in a block. In the first iteration of the while loop, if `cacheIndex` is less than this number, we add the value stored at `cache[cacheIndex + i + 1]` to the value of `cache[cacheIndex + 1]`. Then we synchronise the threads again, divide `i` by two and enter the second while loop iteration. If you work through this conceptually, you should see that provided the number of threads in a block is an even number, eventually the value at `cache[1]` will be equal to the sum of all the elements in `cache`.
+
+
+Now we need to write the value of `cache[1]` to `c` (remember that we can not directly return the value of `cache[1]` due to the requirement that the kernel must always return `nothing`).
 
 
 ```
+# cache[1] now contains the sum of vector dot product calculations done in
+# this block, so we write it to c
+if cacheIndex == 0
+    c[blockIdx().x] = cache[1]
+end
 
-Here, we initialise ```i``` as half of the total number of threads in a block. In the first iteration of the while loop, if ```cacheIndex``` is less than this number, we add the value stored at ```cache[cacheIndex + i + 1]``` to the value of ```cache[cacheIndex + 1]```. Then we synchronise the threads again, divide ```i``` by two and enter the second while loop iteration. If you work through this conceptually, you should see that provided the number of threads in a block is an even number, eventually the value at ```cache[1]``` will be equal to the sum of all the elements in ```cache```.
-
-Now we need to write the value of ```cache[1]``` to ```c``` (remember that we can not directly return the value of ```cache[1]``` due to the requirement that the kernel must always return ```nothing```).
-
+return nothing
+end
 ```
 
-
-# cache[1] now contains the sum of vector dot product calculations done in # this block, so we write it to c if cacheIndex == 0     c[blockIdx().x] = cache[1] end
-
-
-return nothing end
-
-
-```
 
 And that's it! We have made it through the kernel. Now all we have to do is run the kernel on a GPU:
 
+
 ```
-
-
 function main()
 
+    # Initialise variables
+    N::Int64 = 33 * 1024
+    threadsPerBlock::Int64 = 256
+    blocksPerGrid::Int64 = min(32, (N + threadsPerBlock - 1) / threadsPerBlock)
 
-```
-# Initialise variables
-N::Int64 = 33 * 1024
-threadsPerBlock::Int64 = 256
-blocksPerGrid::Int64 = min(32, (N + threadsPerBlock - 1) / threadsPerBlock)
+    # Create a,b and c
+    a = CuArrays.CuArray(fill(0, N))
+    b = CuArrays.CuArray(fill(0, N))
+    c = CuArrays.CuArray(fill(0, blocksPerGrid))
 
-# Create a,b and c
-a = CuArrays.CuArray(fill(0, N))
-b = CuArrays.CuArray(fill(0, N))
-c = CuArrays.CuArray(fill(0, blocksPerGrid))
+    # Fill a and b
+    for i in 1:N
+        a[i] = i
+        b[i] = 2*i
+    end
 
-# Fill a and b
-for i in 1:N
-    a[i] = i
-    b[i] = 2*i
+    # Execute the kernel. Note the shmem argument - this is necessary to allocate
+    # space for the cache we allocate on the gpu with @cuDynamicSharedMem
+    @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
+    (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
+
+    # Copy c back from the gpu (device) to the host
+    c = Array(c)
+
+    local result = 0
+
+    # Sum the values in c
+    for i in 1:blocksPerGrid
+        result += c[i]
+    end
+
+    # Check whether output is correct
+    println("Does GPU value ", result, " = ", 2 * sum_squares(N - 1))
 end
-
-# Execute the kernel. Note the shmem argument - this is necessary to allocate
-# space for the cache we allocate on the gpu with @cuDynamicSharedMem
-@cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
-(threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
-
-# Copy c back from the gpu (device) to the host
-c = Array(c)
-
-local result = 0
-
-# Sum the values in c
-for i in 1:blocksPerGrid
-    result += c[i]
-end
-
-# Check whether output is correct
-println("Does GPU value ", result, " = ", 2 * sum_squares(N - 1))
-```
-
-
-end
-
 
 main()
 
-
-```
-
 ```
 
 
-main()`starts by initialising several variables, including`N`which sets the size of`a`,`b`and`c`. We also initialise the number of threads we want the GPU to use per block and the number of blocks we want to use on the GPU. Next, we use CuArrays to create`a`,`b`and`c`and to fill`a`and`b`. Then, we use`@cuda``` to execute the kernel on the GPU:
+`main()` starts by initialising several variables, including `N` which sets the size of `a`, `b` and `c`. We also initialise the number of threads we want the GPU to use per block and the number of blocks we want to use on the GPU. Next, we use CuArrays to create `a`, `b` and `c` and to fill `a` and `b`. Then, we use `@cuda` to execute the kernel on the GPU:
 
 
 ```
@@ -308,6 +306,8 @@ end
 
 And that is it! We now have a complete Julia script which calculates a vector dot product on a GPU, making use of shared memory and synchronisation. In the next section, we will discuss streaming.
 
+
+<a id='A-Note-on-Static-and-Dynamic-Allocation-1'></a>
 
 # A Note on Static and Dynamic Allocation
 

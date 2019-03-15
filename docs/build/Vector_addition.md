@@ -1,9 +1,13 @@
 
+<a id='An-Introduction-to-Parallelism-1'></a>
+
 # An Introduction to Parallelism
 
 
 Congratulations! You (finally?) got your environment set up and are ready to start writing some GPU code. If this took you less than a week you should probably throw yourself a party.
 
+
+<a id='Party-time-1'></a>
 
 # Party time
 
@@ -22,7 +26,7 @@ end
 ```
 
 
-The function add! takes three vectors (a, b and c), adds each element of a and b together and stores the result in c. Note that we do not explicitly return c, because the exclamation mark at the end of add! indicates that add! is a function that modifies it's arguments.
+The function `add!()` takes three vectors (`a`, `b`  and `c`), adds each element of `a` and `b` together and stores the result in `c`. Note that we do not explicitly return `c`, because the exclamation mark at the end of `add!()` indicates that `add!()` is a function that modifies it's arguments.
 
 
 We could call add! in a Julia script like this:
@@ -55,8 +59,10 @@ main()
 ```
 
 
-main() is a very simple function that makes three vectors, a, b and c. It populates a and b with values, calls add! to add each value in a and b together, then runs a for loop to check that the values stored in c make sense.
+`main()` is a very simple function that makes three vectors, `a`, `b` and `c`. It populates `a` and `b` with values, calls `add!()` to add each value in `a` and `b` together, then runs a for loop to check that the values stored in `c` make sense.
 
+
+<a id='Adding-Vectors-on-a-GPU-1'></a>
 
 # Adding Vectors on a GPU
 
@@ -217,6 +223,8 @@ Note that in both versions of main, the sanity check is carried out on the host 
 So we've written our first Julia script that will execute on a GPU! That's pretty cool. But again, the eagle eyed amongst you might be grumbling. Whilst our script does run on a GPU, there is absolutely no parallelism in it. In fact, it is likely that the GPU version of our script is actually slower than the CPU version, given that GPU processors are generally slower than CPU processors AND we had to copy a load of data from host to device and back again in the GPU version, which we didn't have to bother with in the CPU version. Time to introduce some parallelism to our script.
 
 
+<a id='Parallelising-over-threads-1'></a>
+
 # Parallelising over threads
 
 
@@ -298,6 +306,8 @@ tid = threadIdx().x
 
 We spawn 10 threads and on each thread one element of c is calculated. Clearly this will be a lot faster than calculating all 10 elements sequentially.
 
+
+<a id='Parallelising-over-blocks-1'></a>
 
 # Parallelising over blocks
 
