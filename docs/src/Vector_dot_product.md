@@ -1,7 +1,3 @@
-# Health Warning: Types
-
-The vector addition example in the previous section was written in fairly high level code. We didn't have to think about memory allocation or even types. As we move on to more involved examples in this section and beyond, this is increasingly going to change. Julia has an optional types system, which in normal Julia usage often means that in practice you can ignore that types exist. It is often not possible to ignore types in Julia GPU programming. If you are a bit hazy about what types are, I recommend doing a bit of background reading from the Julia manual before proceeding. I will assume you know what types are here.
-
 # Shared Memory and Synchronisation
 
 Following our example of vector addition in the previous section, you may be left wondering what the point of making a distinction between blocks and threads is. This section should make this clear.
@@ -138,8 +134,7 @@ cache[cacheIndex + 1] = temp
 
 In the next step of the kernel, we want to sum up all the values stored in shared memory. We do this by finding the sum of all the elements in ```cache```. But remember that each thread is running asynchronously - just because one thread has finished executing the line:
 
- ```
- cache[cacheIndex + 1] = temp
+ ```cache[cacheIndex + 1] = temp
  ```
 
 Doesn't mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:
