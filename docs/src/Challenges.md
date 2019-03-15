@@ -29,7 +29,7 @@ The second error message indicates that your code compiled successfully (unless 
 
 Unfortunately, you will never see the sort of error message you are probably accustomed to in Julia, where a description of why the code failed to compile or run and a line number are provided. A description of why this is and macros you can use to help debug are described here: http://juliagpu.github.io/CUDAnative.jl/latest/man/troubleshooting.html. In practice, I often debug by iteratively commenting out half of the remaining lines of code in my kernel to identify which line(s) are causing problems.
 
-#CUDAnative Does Not Support All of Julia
+# CUDAnative Does Not Support All of Julia
 
 This is actually unsurprising when you think about it – Julia is pretty big and CUDAnative is maintained by a relatively small number of people. Plus, actually working out how you would implement support for some of Julia’s features on a GPU is really not trivial.
 
