@@ -12,7 +12,7 @@ pages = Any[
 "Getting Started" => Any["GPU_background.md","Accessing_GPUs.md",
 "Setup_Julia.md"],
 "Developing With GPUs" => Any["Vector_addition.md", "Vector_dot_product.md",
-"Streaming.md"],
+"Streaming.md", "Challenges.md"],
 "Performance" => Any["Profiling.md", "Performance_thoughts.md"],
 "Summary" => "Summary.md",
 "Further Reading" => "Further_Reading.md",
