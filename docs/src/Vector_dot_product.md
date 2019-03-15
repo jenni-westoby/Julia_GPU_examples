@@ -134,8 +134,9 @@ cache[cacheIndex + 1] = temp
 
 In the next step of the kernel, we want to sum up all the values stored in shared memory. We do this by finding the sum of all the elements in ```cache```. But remember that each thread is running asynchronously - just because one thread has finished executing the line:
 
- ```cache[cacheIndex + 1] = temp
- ```
+```
+cache[cacheIndex + 1] = temp
+```
 
 Doesn't mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:
 
