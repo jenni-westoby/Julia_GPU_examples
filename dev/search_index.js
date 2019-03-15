@@ -37,7 +37,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Some Background on GPUs",
     "title": "What are GPUs?",
     "category": "section",
-    "text": "You have probably heard of a type of computer chip called a CPU. GPUs are a different type of computer chip. The major difference between CPUs and GPUs is how each chip is organised. Whereas CPUs tend to have a small number of cores and threads, GPUs can have orders of magnitudes more. On GPUs, you can write code that parallelises across thousands of threads, something that simply would not be possible on CPUs."
+    "text": "You have probably heard of a type of computer chip called a CPU. GPUs are a different type of computer chip. The major difference between CPUs and GPUs is how each chip is organised. Whereas CPUs tend to have a small number of threads, GPUs can have orders of magnitudes more. On GPUs, you can write code that parallelises across thousands of threads, something that simply would not be possible on CPUs without great effort and expense."
 },
 
 {
@@ -45,7 +45,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Some Background on GPUs",
     "title": "How are GPUs organised?",
     "category": "section",
-    "text": "(Image: )"
+    "text": "(Image: )Each GPU contains a \'grid\' of \'blocks\'. Each block in that grid is itself composed of a matrix of \'threads\'. Programs written to run on GPUs can be parallelised over blocks or threads or both. Each block has an index representing its position in the grid, and each thread has an index representing its position within its block."
 },
 
 {
@@ -53,15 +53,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Some Background on GPUs",
     "title": "Host and Device",
     "category": "section",
-    "text": "Introduce kernels here"
+    "text": "Software written for GPUs rarely runs entirely on GPUs. Usually, at least a small part of GPU compatible software will run on CPUs. For example, copying data from CPUs to GPUs is a required step for most GPU software, and the copying instruction will need to execute at least partly on a CPU. Because GPU software typically executes instructions on both CPUs and GPUs, it is useful to have some terminology to describe where a particular line of code is being executed. Code that executes on CPUs is commonly described as executing \'on the host\', whilst code executing on GPUs is described as executing \'on the device\'. We can also use the terms \'host\' and \'device\' to describe where data lives in memory and operations copying data between CPUs and GPUs."
 },
 
 {
-    "location": "GPU_background/#Glossary-of-terms-1",
+    "location": "GPU_background/#Kernel-1",
     "page": "Some Background on GPUs",
-    "title": "Glossary of terms",
+    "title": "Kernel",
     "category": "section",
-    "text": "GridBlockThreadHostDeviceKernelHopefully this has got you hyped to get started developing on GPUs! Next we will make sure we have access to a usable GPU."
+    "text": "A common way to organise code that will run on a GPU is to write a function that will execute on the GPU. This function is typically called after all the data required by the function has been copied from host (CPU) to device (GPU). Because the function is typically executed thousands of times in parallel, the function that will execute on the GPU is given the special name of \'kernel\'. "
 },
 
 {
@@ -293,7 +293,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Challenges in Julia GPU Software Development",
     "title": "Impenetrable Error Messages",
     "category": "section",
-    "text": "When developing GPU software, you will inevitably write kernels with bugs in them. If a bug in your kernel causes the kernel to exit and return an error message, you will often see error messages such as these:ERROR: LLVM IR generated for Kernel(CuDeviceArray{Int64,1,CUDAnative.AS.Global}) is not GPU compatibleOrThe error about not returning nothingThe first error message broadly means that you tried to do something which could not compile to GPU code. Common reasons this might happen include:You tried to use a Julia feature which is not supported by CUDAnative (see below).\nYour kernel contains unexpected dynamic behavior.\nYour kernel contains type instabilities.The second error message indicates that your code compiled successfully (unless it is preceded by the first error message) but that something went wrong during runtime, hence it returned something other than nothing.Unfortunately, you will never see the sort of error message you are probably accustomed to in Julia, where a description of why the code failed to compile or run and a line number are provided. A description of why this is and macros you can use to help debug are described here: http://juliagpu.github.io/CUDAnative.jl/latest/man/troubleshooting.html. In practice, I often debug by iteratively commenting out half of the remaining lines of code in my kernel to identify which line(s) are causing problems.#CUDAnative Does Not Support All of JuliaThis is actually unsurprising when you think about it – Julia is pretty big and CUDAnative is maintained by a relatively small number of people. Plus, actually working out how you would implement support for some of Julia’s features on a GPU is really not trivial.Unfortunately, the subset of Julia supported by CUDAnative is undocumented. Some commonly used Julila features not supported by CUDAnative at the time of writing include:Strings\nType conversion\nRecursion\nExceptions\nCalls to the Julia runtime\nGarbage collection"
+    "text": "When developing GPU software, you will inevitably write kernels with bugs in them. If a bug in your kernel causes the kernel to exit and return an error message, you will often see error messages such as these:ERROR: LLVM IR generated for Kernel(CuDeviceArray{Int64,1,CUDAnative.AS.Global}) is not GPU compatibleOrThe error about not returning nothingThe first error message broadly means that you tried to do something which could not compile to GPU code. Common reasons this might happen include:You tried to use a Julia feature which is not supported by CUDAnative (see below).\nYour kernel contains unexpected dynamic behavior.\nYour kernel contains type instabilities.The second error message indicates that your code compiled successfully (unless it is preceded by the first error message) but that something went wrong during runtime, hence it returned something other than nothing.Unfortunately, you will never see the sort of error message you are probably accustomed to in Julia, where a description of why the code failed to compile or run and a line number are provided. A description of why this is and macros you can use to help debug are described here: http://juliagpu.github.io/CUDAnative.jl/latest/man/troubleshooting.html. In practice, I often debug by iteratively commenting out half of the remaining lines of code in my kernel to identify which line(s) are causing problems."
+},
+
+{
+    "location": "Challenges/#CUDAnative-Does-Not-Support-All-of-Julia-1",
+    "page": "Challenges in Julia GPU Software Development",
+    "title": "CUDAnative Does Not Support All of Julia",
+    "category": "section",
+    "text": "This is actually unsurprising when you think about it – Julia is pretty big and CUDAnative is maintained by a relatively small number of people. Plus, actually working out how you would implement support for some of Julia’s features on a GPU is really not trivial.Unfortunately, the subset of Julia supported by CUDAnative is undocumented. Some commonly used Julila features not supported by CUDAnative at the time of writing include:Strings\nType conversion\nRecursion\nExceptions\nCalls to the Julia runtime\nGarbage collection"
 },
 
 {
