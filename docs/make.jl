@@ -6,6 +6,7 @@ end
 makedocs(modules=[MyModule],
 build = "build",
 repo = "github.com/jenni-westoby/Julia_GPU_examples.jl.git",
+sitename = "Julia_GPU_examples.jl",
 pages = Any[
 "Home" => "index.md",
 "Getting Started" => Any["GPU_background.md","Accessing_GPUs.md",
