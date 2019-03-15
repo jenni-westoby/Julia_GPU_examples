@@ -1,5 +1,5 @@
 
-#Streaming
+# Streaming
 
 
 In CUDA, a stream is a sequence of operations executed in order on a device. We can use multiple streams to execute multiple sequences of operations sequentially. A common reason for using multiple streams in GPU programming is to 'hide' the time taken for data transfer. Often copying data between the host and the device is one of the slowest steps in a GPU program. By writing your program with streams, you can split your data into chunks and have the GPU analysing a chunk in one stream whilst simultaneously copying a chunk of data to the GPU in another stream.
@@ -8,7 +8,7 @@ In CUDA, a stream is a sequence of operations executed in order on a device. We 
 It should be noted that Julia's support for streaming in GPU programming is still rudimentary. As you will see, it is easy to stream kernel execution (analysis), but the ideal of streaming both data transfer and analysis is more challenging. Streaming both data transfer and analysis will require us to write much lower level code than is usually seen in Julia. Let's start with the simpler task of streaming our analysis.
 
 
-##Streaming our Analysis
+# Streaming our Analysis
 
 
 In this example, we will return to our favourite problem of vector addition. A script which will carry out vector addition in two streams is shown below:
@@ -18,7 +18,7 @@ In this example, we will return to our favourite problem of vector addition. A s
 using CuArrays, CUDAnative, CUDAdrv
 using Test
 
-#Kernel
+# Kernel
 function add!(a,b,c, index)
     c[index] = a[index] + b[index]
     return nothing
@@ -26,33 +26,33 @@ end
 
 function main()
 
-    #Initialise a, b and c
+    # Initialise a, b and c
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Put values in a and b
+    # Put values in a and b
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Create two streams
+    # Create two streams
     s1 = CuStream()
     s2 = CuStream()
 
-    #Call add! asynchronously in two streams
+    # Call add! asynchronously in two streams
     for i in 1:2:min(length(a), length(b), length(c))
         @cuda threads = 1 stream = s1 add!(a,b,c, i)
         @cuda threads = 1 stream = s2 add!(a,b,c, i+1)
     end
 
-    #Copy arrays back to host (CPU)
+    # Copy arrays back to host (CPU)
     a=Array(a)
     b=Array(b)
     c=Array(c)
 
-    #Check the addition worked
+    # Check the addition worked
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -67,7 +67,7 @@ So what have we changed to introduce streaming to the classic vector addition ex
 
 
 ```
-#Kernel
+# Kernel
 function add!(a,b,c, index)
     c[index] = a[index] + b[index]
     return nothing
@@ -82,7 +82,7 @@ As previously, `main()` begins by creating `a`, `b` and `c` and putting values i
 
 
 ```
-#Create two streams
+# Create two streams
 s1 = CuStream()
 s2 = CuStream()
 ```
@@ -92,7 +92,7 @@ This is fairly self explanatory - `CuStream()` is a function from CUDAnative whi
 
 
 ```
-#Call add! asynchronously in two streams
+# Call add! asynchronously in two streams
 for i in 1:2:min(length(a), length(b), length(c))
     @cuda threads = 1 stream = s1 add!(a,b,c, i)
     @cuda threads = 1 stream = s2 add!(a,b,c, i + 1)
@@ -109,7 +109,7 @@ Hopefully you agree that executing the kernel across two streams was extremely e
 Streaming can really come in to its own when used to stagger data transfer and analysis between streams. This is possible in Julia for GPU applications, but comes with a health warning...
 
 
-##Health Warning: Low Level Code Alert
+# Health Warning: Low Level Code Alert
 
 
 To stagger data transfer and analysis between streams, we will not be able to use CUDAnative or CUarrays. This is because `CuArrays.CuArray()`, the function we have used to copy data from host to device up to now, executes synchronously. This means that the function does not return until the data transfer is complete. If we try to stream data transfer with a synchronous data transfer function, we will not acheive any speed up because no other streams can receive and start executing any further instructions until the current stream's data transfer is complete and the function has returned.
@@ -121,7 +121,7 @@ To acheive speed-up by streaming data transfer, the process of data transfer mus
 Unlike CuArrays and CUDAnative, CUDAdrv provides support for asynchronous data transfer. The code in the next example is very analogous to CUDA C or C++ code and the example below does in fact include a (very short) CUDA C script. In practice, this means we will have to think about memory management more than previously and our code will be less pretty. If you have never written code in a lower level language like C, you may struggle to follow the next section. If you are struggling, do not panic and just move on to the next section. In practice, you can often speed up your code a lot by porting to GPU without using streams.
 
 
-##Streaming Data Transfer and Analysis
+# Streaming Data Transfer and Analysis
 
 
 Let's rewrite our vector addition example so that it uses streaming for both data transfer and analysis.
@@ -130,64 +130,64 @@ Let's rewrite our vector addition example so that it uses streaming for both dat
 ```
 using CUDAdrv, Test
 
-#'Turn on' device
+# 'Turn on' device
 dev = CuDevice(0)
 ctx = CuContext(dev)
 
-#Read in C code
+# Read in C code
 md = CuModuleFile(joinpath(@__DIR__, "vadd.ptx"))
 vadd = CuFunction(md, "kernel_vadd")
 
-#Make data
+# Make data
 dims = 100
 a = round.(rand(Float32, dims) * 100)
 b = round.(rand(Float32, dims) * 100)
 c = similar(a)
 
-#Allocate memory for a and b on device stream 1
+# Allocate memory for a and b on device stream 1
 buf_a1 = Mem.alloc(sizeof(Float32))
 buf_b1 = Mem.alloc(sizeof(Float32))
 
-#Allocate memory for a and b on device stream 2
+# Allocate memory for a and b on device stream 2
 buf_a2 = Mem.alloc(sizeof(Float32))
 buf_b2 = Mem.alloc(sizeof(Float32))
 
-#Allocate memory for c on device
+# Allocate memory for c on device
 d_c1 = Mem.alloc(sizeof(Float32))
 d_c2 = Mem.alloc(sizeof(Float32))
 
-#Make streams
+# Make streams
 s1 = CuStream()
 s2 = CuStream()
 
-#Iterate over arrays in increments of 2
+# Iterate over arrays in increments of 2
 for i in 1:2:dims
 
-    #Asynchronously copy a[i] and a[i+1] onto device
+    # Asynchronously copy a[i] and a[i+1] onto device
     Mem.upload!(buf_a1, Ref(a, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_a2, Ref(a, i+1), sizeof(Float32), s2, async = true)
 
-    #Asynchronously copy b[i] and b[i+1] onto device
+    # Asynchronously copy b[i] and b[i+1] onto device
     Mem.upload!(buf_b1, Ref(b, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_b2, Ref(b, i+1), sizeof(Float32), s2, async = true)
 
-    #Call vadd to run on gpu
+    # Call vadd to run on gpu
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a1, buf_b1, d_c1,
     threads = 1, stream = s1)
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a2, buf_b2, d_c2,
     threads = 1, stream = s2)
 
-    #Asynchronously copy c[i] and c[i+1] back to host
+    # Asynchronously copy c[i] and c[i+1] back to host
     Mem.download!(Ref(c, i), d_c1, sizeof(Float32), s1, async = true)
     Mem.download!(Ref(c, i+1), d_c2, sizeof(Float32), s2, async = true)
 
 
 end
 
-#Check it worked
+# Check it worked
 @test a+b ≈ c
 
-#Destroy context
+# Destroy context
 destroy!(ctx)
 ```
 
@@ -198,7 +198,7 @@ This is probably looking pretty alien at this point - don't worry, we will work 
 ```
 using CUDAdrv, Test
 
-#'Turn on' device
+# 'Turn on' device
 dev = CuDevice(0)
 ctx = CuContext(dev)
 ```
@@ -211,7 +211,7 @@ The lines of code that follow context creation will either delight or alarm you,
 
 
 ```
-#Read in C code
+# Read in C code
 md = CuModuleFile(joinpath(@__DIR__, "vadd.ptx"))
 vadd = CuFunction(md, "kernel_vadd")
 ```
@@ -296,14 +296,14 @@ nvcc --ptx /path/to/cuda_C_file.cu
 ```
 
 
-It is also possible to make PTX code from Julia code using functions in CUDAnative such as `code_ptx()` - see http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html#CUDAnative.code_ptx for details.
+It is also possible to make PTX code from Julia code using functions in CUDAnative such as `code_ptx()` - see http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html# CUDAnative.code_ptx for details.
 
 
 Ok, so the outcome of all of the above is that we can now have a calleable GPU compatible function called `vadd` which performs vector addition. Next, we create our data:
 
 
 ```
-#Make data
+# Make data
 dims = 100
 a = round.(rand(Float32, dims) * 100)
 b = round.(rand(Float32, dims) * 100)
@@ -315,7 +315,7 @@ This is done on a CPU and there is nothing really to note except that we are not
 
 
 ```
-#Allocate memory for a and b on device stream 1
+# Allocate memory for a and b on device stream 1
 buf_a1 = Mem.alloc(sizeof(Float32))
 buf_b1 = Mem.alloc(sizeof(Float32))
 ```
@@ -325,7 +325,7 @@ Again, this is the first time we have had to do this because previously it was t
 
 
 ```
-#Allocate memory for a and b on device stream 2
+# Allocate memory for a and b on device stream 2
 buf_a2 = Mem.alloc(sizeof(Float32))
 buf_b2 = Mem.alloc(sizeof(Float32))
 ```
@@ -335,11 +335,11 @@ Next, we allocate space for `c` on both streams and create the streams:
 
 
 ```
-#Allocate memory for c on device
+# Allocate memory for c on device
 d_c1 = Mem.alloc(sizeof(Float32))
 d_c2 = Mem.alloc(sizeof(Float32))
 
-#Make streams
+# Make streams
 s1 = CuStream()
 s2 = CuStream()
 ```
@@ -349,24 +349,24 @@ Now we are ready to actually start streaming data transfer and analysis. Like in
 
 
 ```
-#Iterate over arrays in increments of 2
+# Iterate over arrays in increments of 2
 for i in 1:2:dims
 
-    #Asynchronously copy a[i] and a[i+1] onto device
+    # Asynchronously copy a[i] and a[i+1] onto device
     Mem.upload!(buf_a1, Ref(a, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_a2, Ref(a, i+1), sizeof(Float32), s2, async = true)
 
-    #Asynchronously copy b[i] and b[i+1] onto device
+    # Asynchronously copy b[i] and b[i+1] onto device
     Mem.upload!(buf_b1, Ref(b, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_b2, Ref(b, i+1), sizeof(Float32), s2, async = true)
 
-    #Call vadd to run on gpu
+    # Call vadd to run on gpu
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a1, buf_b1, d_c1,
     threads = 1, stream = s1)
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a2, buf_b2, d_c2,
     threads = 1, stream = s2)
 
-    #Asynchronously copy c[i] and c[i+1] back to host
+    # Asynchronously copy c[i] and c[i+1] back to host
     Mem.download!(Ref(c, i), d_c1, sizeof(Float32), s1, async = true)
     Mem.download!(Ref(c, i+1), d_c2, sizeof(Float32), s2, async = true)
 
@@ -385,10 +385,10 @@ Finally, we finish our script by checking the results of our calculation and des
 
 
 ```
-#Check it worked
+# Check it worked
 @test a+b ≈ c
 
-#Destroy context
+# Destroy context
 destroy!(ctx)
 ```
 
@@ -399,7 +399,7 @@ This example demonstrates that it is possible to stream data transfer and analys
 In the next section, we will consider some Julia specific aspects of writing GPU compatible software.
 
 
-#References
+# References
 
 
 The data streaming and analysis example above was based on code taken from here: https://github.com/JuliaGPU/CUDAdrv.jl/tree/master/examples

@@ -90,20 +90,20 @@
     <a class="current" href="./">Streaming</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#streaming">Streaming</a></li>
+    <li class="toctree-l3"><a href="# streaming">Streaming</a></li>
     
         <ul>
         
-            <li><a class="toctree-l4" href="#streaming-our-analysis">Streaming our Analysis</a></li>
+            <li><a class="toctree-l4" href="# streaming-our-analysis">Streaming our Analysis</a></li>
         
-            <li><a class="toctree-l4" href="#health-warning-low-level-code-alert">Health Warning: Low Level Code Alert</a></li>
+            <li><a class="toctree-l4" href="# health-warning-low-level-code-alert">Health Warning: Low Level Code Alert</a></li>
         
-            <li><a class="toctree-l4" href="#streaming-data-transfer-and-analysis">Streaming Data Transfer and Analysis</a></li>
+            <li><a class="toctree-l4" href="# streaming-data-transfer-and-analysis">Streaming Data Transfer and Analysis</a></li>
         
         </ul>
     
 
-    <li class="toctree-l3"><a href="#references">References</a></li>
+    <li class="toctree-l3"><a href="# references">References</a></li>
     
 
     </ul>
@@ -188,7 +188,7 @@
 <pre class="codehilite"><code>using CuArrays, CUDAnative, CUDAdrv
 using Test
 
-#Kernel
+# Kernel
 function add!(a,b,c, index)
     c[index] = a[index] + b[index]
     return nothing
@@ -196,33 +196,33 @@ end
 
 function main()
 
-    #Initialise a, b and c
+    # Initialise a, b and c
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Put values in a and b
+    # Put values in a and b
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Create two streams
+    # Create two streams
     s1 = CuStream()
     s2 = CuStream()
 
-    #Call add! asynchronously in two streams
+    # Call add! asynchronously in two streams
     for i in 1:2:min(length(a), length(b), length(c))
         @cuda threads = 1 stream = s1 add!(a,b,c, i)
         @cuda threads = 1 stream = s2 add!(a,b,c, i+1)
     end
 
-    #Copy arrays back to host (CPU)
+    # Copy arrays back to host (CPU)
     a=Array(a)
     b=Array(b)
     c=Array(c)
 
-    #Check the addition worked
+    # Check the addition worked
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -233,7 +233,7 @@ main()</code></pre>
 
 
 <p>So what have we changed to introduce streaming to the classic vector addition example? Firstly, the kernel is slightly different:</p>
-<pre class="codehilite"><code>#Kernel
+<pre class="codehilite"><code># Kernel
 function add!(a,b,c, index)
     c[index] = a[index] + b[index]
     return nothing
@@ -242,13 +242,13 @@ end</code></pre>
 
 <p>We now pass the index into the vectors as an argument, rather than relying on the thread or block index.</p>
 <p>As previously, <code>main()</code> begins by creating <code>a</code>, <code>b</code> and <code>c</code> and putting values in <code>a</code> and <code>b</code>. The next change is halfway through <code>main()</code>, where we create two streams:</p>
-<pre class="codehilite"><code>#Create two streams
+<pre class="codehilite"><code># Create two streams
 s1 = CuStream()
 s2 = CuStream()</code></pre>
 
 
 <p>This is fairly self explanatory - <code>CuStream()</code> is a function from CUDAnative which creates a stream. Next, we use the two streams to execute the kernel simultaneously in multiple streams:</p>
-<pre class="codehilite"><code>#Call add! asynchronously in two streams
+<pre class="codehilite"><code># Call add! asynchronously in two streams
 for i in 1:2:min(length(a), length(b), length(c))
     @cuda threads = 1 stream = s1 add!(a,b,c, i)
     @cuda threads = 1 stream = s2 add!(a,b,c, i + 1)
@@ -266,78 +266,78 @@ end</code></pre>
 <p>Let's rewrite our vector addition example so that it uses streaming for both data transfer and analysis.</p>
 <pre class="codehilite"><code>using CUDAdrv, Test
 
-#'Turn on' device
+# 'Turn on' device
 dev = CuDevice(0)
 ctx = CuContext(dev)
 
-#Read in C code
+# Read in C code
 md = CuModuleFile(joinpath(@__DIR__, &quot;vadd.ptx&quot;))
 vadd = CuFunction(md, &quot;kernel_vadd&quot;)
 
-#Make data
+# Make data
 dims = 100
 a = round.(rand(Float32, dims) * 100)
 b = round.(rand(Float32, dims) * 100)
 c = similar(a)
 
-#Allocate memory for a and b on device stream 1
+# Allocate memory for a and b on device stream 1
 buf_a1 = Mem.alloc(sizeof(Float32))
 buf_b1 = Mem.alloc(sizeof(Float32))
 
-#Allocate memory for a and b on device stream 2
+# Allocate memory for a and b on device stream 2
 buf_a2 = Mem.alloc(sizeof(Float32))
 buf_b2 = Mem.alloc(sizeof(Float32))
 
-#Allocate memory for c on device
+# Allocate memory for c on device
 d_c1 = Mem.alloc(sizeof(Float32))
 d_c2 = Mem.alloc(sizeof(Float32))
 
-#Make streams
+# Make streams
 s1 = CuStream()
 s2 = CuStream()
 
-#Iterate over arrays in increments of 2
+# Iterate over arrays in increments of 2
 for i in 1:2:dims
 
-    #Asynchronously copy a[i] and a[i+1] onto device
+    # Asynchronously copy a[i] and a[i+1] onto device
     Mem.upload!(buf_a1, Ref(a, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_a2, Ref(a, i+1), sizeof(Float32), s2, async = true)
 
-    #Asynchronously copy b[i] and b[i+1] onto device
+    # Asynchronously copy b[i] and b[i+1] onto device
     Mem.upload!(buf_b1, Ref(b, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_b2, Ref(b, i+1), sizeof(Float32), s2, async = true)
 
-    #Call vadd to run on gpu
+    # Call vadd to run on gpu
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a1, buf_b1, d_c1,
     threads = 1, stream = s1)
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a2, buf_b2, d_c2,
     threads = 1, stream = s2)
 
-    #Asynchronously copy c[i] and c[i+1] back to host
+    # Asynchronously copy c[i] and c[i+1] back to host
     Mem.download!(Ref(c, i), d_c1, sizeof(Float32), s1, async = true)
     Mem.download!(Ref(c, i+1), d_c2, sizeof(Float32), s2, async = true)
 
 
 end
 
-#Check it worked
+# Check it worked
 @test a+b ≈ c
 
-#Destroy context
+# Destroy context
 destroy!(ctx)</code></pre>
 
 
 <p>This is probably looking pretty alien at this point - don't worry, we will work through it slowly. Starting from the beginning:</p>
 <pre class="codehilite"><code>using CUDAdrv, Test
 
-#'Turn on' device
+# 'Turn on' device
 dev = CuDevice(0)
 ctx = CuContext(dev)</code></pre>
 
 
 <p>The script starts as usual by loading some Julia packages. Then there are two lines we haven't seen before calling <code>CuDevice</code> and <code>CuContext</code>. These two lines essentially work together to create a context on the GPU. A GPU context can be thought of as analogous to a CPU process, so by running these two lines we are creating an address space and allocated resources on the GPU where our kernel can run and we can copy data. Once we have finished working on the GPU, we will need to <code>destroy</code> our context so the system can clean up the resources allocated there. Both creating the context and destroying it are taken care of behind the scenes by CUDAnative, which is why we have been able to ignore these functions until now.</p>
 <p>The lines of code that follow context creation will either delight or alarm you, depending on your relationship with C:</p>
-<pre class="codehilite"><code>#Read in C code
+<pre class="codehilite"><code># Read in C code
 md = CuModuleFile(joinpath(@__DIR__, &quot;vadd.ptx&quot;))
 vadd = CuFunction(md, &quot;kernel_vadd&quot;)</code></pre>
 
@@ -407,9 +407,9 @@ __global__ void kernel_vadd(const float *a, const float *b, float *c)
 <pre class="codehilite"><code>nvcc --ptx /path/to/cuda_C_file.cu</code></pre>
 
 
-<p>It is also possible to make PTX code from Julia code using functions in CUDAnative such as <code>code_ptx()</code> - see http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html#CUDAnative.code_ptx for details.</p>
+<p>It is also possible to make PTX code from Julia code using functions in CUDAnative such as <code>code_ptx()</code> - see http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html# CUDAnative.code_ptx for details.</p>
 <p>Ok, so the outcome of all of the above is that we can now have a calleable GPU compatible function called <code>vadd</code> which performs vector addition. Next, we create our data:</p>
-<pre class="codehilite"><code>#Make data
+<pre class="codehilite"><code># Make data
 dims = 100
 a = round.(rand(Float32, dims) * 100)
 b = round.(rand(Float32, dims) * 100)
@@ -417,46 +417,46 @@ c = similar(a)</code></pre>
 
 
 <p>This is done on a CPU and there is nothing really to note except that we are not using CuArrays. Next, we need to allocate memory on the GPU for <code>a</code>, <code>b</code> and <code>c</code>:</p>
-<pre class="codehilite"><code>#Allocate memory for a and b on device stream 1
+<pre class="codehilite"><code># Allocate memory for a and b on device stream 1
 buf_a1 = Mem.alloc(sizeof(Float32))
 buf_b1 = Mem.alloc(sizeof(Float32))</code></pre>
 
 
 <p>Again, this is the first time we have had to do this because previously it was taken care of for us by CUDAnative. In our streaming strategy, we are going to copy one element of <code>a</code> and <code>b</code> to each stream, calculate the value of the corresponding value of <code>c</code>, store that result in <code>c</code>, then copy the value of <code>c</code> back to the host. This means we need to allocate space for one element of <code>a</code>, <code>b</code> and <code>c</code> for each stream. There are two streams, so in practice this means we need to allocate space twice. In the code above, we are allocating space for one element of <code>a</code> and one element of <code>b</code> for the first stream. Each element in <code>a</code> and <code>b</code> is a <code>Float32</code>, so we use <code>sizeof()</code> to work out how many bytes we need to allocate. We also need to allocate space for <code>a</code> and <code>b</code> in stream 2, so we write:</p>
-<pre class="codehilite"><code>#Allocate memory for a and b on device stream 2
+<pre class="codehilite"><code># Allocate memory for a and b on device stream 2
 buf_a2 = Mem.alloc(sizeof(Float32))
 buf_b2 = Mem.alloc(sizeof(Float32))</code></pre>
 
 
 <p>Next, we allocate space for <code>c</code> on both streams and create the streams:</p>
-<pre class="codehilite"><code>#Allocate memory for c on device
+<pre class="codehilite"><code># Allocate memory for c on device
 d_c1 = Mem.alloc(sizeof(Float32))
 d_c2 = Mem.alloc(sizeof(Float32))
 
-#Make streams
+# Make streams
 s1 = CuStream()
 s2 = CuStream()</code></pre>
 
 
 <p>Now we are ready to actually start streaming data transfer and analysis. Like in the 'analysis only' streaming example, we do this here by iterating over our arrays in increments of size 2.</p>
-<pre class="codehilite"><code>#Iterate over arrays in increments of 2
+<pre class="codehilite"><code># Iterate over arrays in increments of 2
 for i in 1:2:dims
 
-    #Asynchronously copy a[i] and a[i+1] onto device
+    # Asynchronously copy a[i] and a[i+1] onto device
     Mem.upload!(buf_a1, Ref(a, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_a2, Ref(a, i+1), sizeof(Float32), s2, async = true)
 
-    #Asynchronously copy b[i] and b[i+1] onto device
+    # Asynchronously copy b[i] and b[i+1] onto device
     Mem.upload!(buf_b1, Ref(b, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_b2, Ref(b, i+1), sizeof(Float32), s2, async = true)
 
-    #Call vadd to run on gpu
+    # Call vadd to run on gpu
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a1, buf_b1, d_c1,
     threads = 1, stream = s1)
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a2, buf_b2, d_c2,
     threads = 1, stream = s2)
 
-    #Asynchronously copy c[i] and c[i+1] back to host
+    # Asynchronously copy c[i] and c[i+1] back to host
     Mem.download!(Ref(c, i), d_c1, sizeof(Float32), s1, async = true)
     Mem.download!(Ref(c, i+1), d_c2, sizeof(Float32), s2, async = true)
 
@@ -467,10 +467,10 @@ end</code></pre>
 <p>As before, we operate on the <code>i</code>th element in one stream and the <code>i + 1</code>th element in the other stream. In each stream, the order of operations is to copy (<code>Mem.upload!</code>) the value of the <code>i</code>th or <code>i + 1</code>th element of <code>a</code> and <code>b</code> from the host to the pre-allocated space on the device. Then we run the kernel (using <code>cudacall</code>) and copy the result back to the host (<code>Mem.download!</code>).</p>
 <p>There are several things worth noting here. First, we must explicitly specify <code>async = true</code> to <code>Mem.upload!</code> and <code>Mem.download!</code> if we want them to execute asynchronously - as a default these functions are synchronous. Second, note that we call the kernel using <code>cudacall</code> rather than <code>@cuda</code> - this is because <code>@cuda</code> is part of CUDAnative which does not support asynchronous copies. Thirdly, note that we must specify which stream we are using for each of these functions - otherwise all of these functions will execute on the same stream as a default.</p>
 <p>Finally, we finish our script by checking the results of our calculation and destroying the device context:</p>
-<pre class="codehilite"><code>#Check it worked
+<pre class="codehilite"><code># Check it worked
 @test a+b ≈ c
 
-#Destroy context
+# Destroy context
 destroy!(ctx)</code></pre>
 
 
@@ -513,13 +513,13 @@ destroy!(ctx)</code></pre>
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: # fcfcfc"> GitHub</a>
       
       
-        <span><a href="../Vector_dot_product/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../Vector_dot_product/" style="color: # fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../Profiling/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../Profiling/" style="color: # fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

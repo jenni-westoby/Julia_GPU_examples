@@ -10,7 +10,7 @@
     display: block;
     position: relative;
     font-size: 90%;
-    color: #838383;
+    color: # 838383;
 }
 
 .wy-menu-vertical .subnav a {
@@ -47,7 +47,7 @@
  * readthedocs theme hides nav items when the window height is
  * too small to contain them.
  *
- * https://github.com/mkdocs/mkdocs/issues/#348
+ * https://github.com/mkdocs/mkdocs/issues/# 348
  */
 .wy-menu-vertical ul {
   margin-bottom: 2em;
@@ -89,13 +89,13 @@ pre code {
  * https://github.com/mkdocs/mkdocs/issues/718
  */
 a code {
-    color: #2980B9;
+    color: # 2980B9;
 }
 a:hover code {
-    color: #3091d1;
+    color: # 3091d1;
 }
 a:visited code {
-    color: #9B59B6;
+    color: # 9B59B6;
 }
 
 /*
@@ -120,7 +120,7 @@ pre .cs, pre .c {
 .no-highlight {
   display: block;
   padding: 0.5em;
-  color: #333;
+  color: # 333;
 }
 
 
@@ -133,7 +133,7 @@ pre .cs, pre .c {
 }
 
 .search-results article {
-    border-top: 1px solid #E1E4E5;
+    border-top: 1px solid # E1E4E5;
     padding-top: 24px;
 }
 
@@ -145,7 +145,7 @@ form .search-query {
     width: 100%;
     border-radius: 50px;
     padding: 6px 12px;  /* csslint allow: box-model */
-    border-color: #D1D4D5;
+    border-color: # D1D4D5;
 }
 
 .wy-menu-vertical li ul {
@@ -169,10 +169,10 @@ form .search-query {
  * https://github.com/mkdocs/mkdocs/issues/656
  */
  .admonition code {
-  color: #404040;
-  border: 1px solid #c7c9cb;
+  color: # 404040;
+  border: 1px solid # c7c9cb;
   border: 1px solid rgba(0, 0, 0, 0.2);
-  background: #f8fbfd;
+  background: # f8fbfd;
   background: rgba(255, 255, 255, 0.7);
 }
 
@@ -191,7 +191,7 @@ form .search-query {
 }
 
 td, th {
-   border: 1px solid #e1e4e5 !important; /* csslint allow: important */
+   border: 1px solid # e1e4e5 !important; /* csslint allow: important */
    border-collapse: collapse;
 }
 

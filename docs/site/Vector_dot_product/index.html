@@ -86,16 +86,16 @@
     <a class="current" href="./">Shared memory and Synchronisation</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#health-warning-types">Health Warning: Types</a></li>
+    <li class="toctree-l3"><a href="# health-warning-types">Health Warning: Types</a></li>
     
 
-    <li class="toctree-l3"><a href="#shared-memory-and-synchronisation">Shared Memory and Synchronisation</a></li>
+    <li class="toctree-l3"><a href="# shared-memory-and-synchronisation">Shared Memory and Synchronisation</a></li>
     
         <ul>
         
-            <li><a class="toctree-l4" href="#vector-dot-product">Vector Dot Product</a></li>
+            <li><a class="toctree-l4" href="# vector-dot-product">Vector Dot Product</a></li>
         
-            <li><a class="toctree-l4" href="#a-note-on-static-and-dynamic-allocation">A Note on Static and Dynamic Allocation</a></li>
+            <li><a class="toctree-l4" href="# a-note-on-static-and-dynamic-allocation">A Note on Static and Dynamic Allocation</a></li>
         
         </ul>
     
@@ -201,27 +201,27 @@
 <p>Next, we need to write the kernel. It is a lot to take in, but don't worry, we will go through it step by step.</p>
 <pre class="codehilite"><code>function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    #Set up shared memory cache for this current block.
+    # Set up shared memory cache for this current block.
     cache = @cuDynamicSharedMem(Int64, threadsPerBlock)
 
-    #Initialise some variables.
+    # Initialise some variables.
     tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
     cacheIndex = threadIdx().x - 1
     temp::Int64 = 0
 
-    #Iterate over vector to do dot product in parallel way
+    # Iterate over vector to do dot product in parallel way
     while tid &lt; N
         temp += a[tid + 1] * b[tid + 1]
         tid += blockDim().x * gridDim().x
     end
 
-    #set cache values
+    # set cache values
     cache[cacheIndex + 1] = temp
 
-    #synchronise threads
+    # synchronise threads
     sync_threads()
 
-    #In the step below, we add up all of the values stored in the cache
+    # In the step below, we add up all of the values stored in the cache
     i::Int = blockDim().x/2
     while i!=0
         if cacheIndex &lt; i
@@ -231,8 +231,8 @@
         i/=2
     end
 
-    #cache[1] now contains the sum of vector dot product calculations done in
-    #this block, so we write it to c
+    # cache[1] now contains the sum of vector dot product calculations done in
+    # this block, so we write it to c
     if cacheIndex == 0
         c[blockIdx().x] = cache[1]
     end
@@ -244,7 +244,7 @@ end</code></pre>
 <p>This is more complicated than the vector addition kernel, so let's work through it bit by bit. Let's start by focusing on the lines below:</p>
 <pre class="codehilite"><code>function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    #Set up shared memory cache for this current block.
+    # Set up shared memory cache for this current block.
     cache = @cuDynamicSharedMem(Int64, threadsPerBlock)</code></pre>
 
 
@@ -254,7 +254,7 @@ end</code></pre>
 
 <p>allocates an array in shared memory with the dimensions <code>threadsPerBlock</code>, where each element in the array is of type <code>Int64</code>.</p>
 <p>So now we have an array of size <code>threadsPerBlock</code> in shared memory which we can fill with <code>Int64</code>s. Next we set the value of the thread index (<code>tid</code>):</p>
-<pre class="codehilite"><code>#Initialise some variables.
+<pre class="codehilite"><code># Initialise some variables.
 tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x</code></pre>
 
 
@@ -269,7 +269,7 @@ temp::Int64 = 0</code></pre>
 
 <p><code>cacheIndex</code> is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for <code>tid</code>. We set it to <code>threadIdx().x - 1</code> so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads.</p>
 <p>Now we are ready to start calculating the dot product:</p>
-<pre class="codehilite"><code>#Iterate over vector to do dot product in parallel way
+<pre class="codehilite"><code># Iterate over vector to do dot product in parallel way
 while tid &lt; N
     temp += a[tid + 1] * b[tid + 1]
     tid += blockDim().x * gridDim().x
@@ -278,20 +278,20 @@ end</code></pre>
 
 <p>For context, <code>N</code> is the number of elements in <code>a</code> (which is the same as the number of elements in <code>b</code>). So while <code>tid</code> less than the number of elements in <code>a</code>, we increment the value of temp by the product of <code>a[tid + 1]</code> and <code>b[tid + 1]</code> - this is the core operation in a vector dot product. Then, we increment <code>tid</code> by the number of threads in a block (<code>blockDim().x</code>) times the number of blocks in a grid (<code>gridDim().x</code>), which is the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.</p>
 <p>After exiting the while loop, we write the value calculated in temp to shared memory:</p>
-<pre class="codehilite"><code>#set cache values
+<pre class="codehilite"><code># set cache values
 cache[cacheIndex + 1] = temp</code></pre>
 
 
 <p>In the next step of the kernel, we want to sum up all the values stored in shared memory. We do this by finding the sum of all the elements in <code>cache</code>. But remember that each thread is running asynchronously - just because one thread has finished executing the line:</p>
 <p><code>cache[cacheIndex + 1] = temp</code></p>
 <p>Doesn't mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:</p>
-<pre class="codehilite"><code>#synchronise threads
+<pre class="codehilite"><code># synchronise threads
 sync_threads()</code></pre>
 
 
 <p>When each thread reaches this line, it pauses in its execution of the kernel until all of the threads in that block have reached the same place. Then, the threads restart again.</p>
 <p>Now all the threads have written to shared memory, we are ready to sum the elements of cache:</p>
-<pre class="codehilite"><code>#In the step below, we add up all of the values stored in the cache
+<pre class="codehilite"><code># In the step below, we add up all of the values stored in the cache
 i::Int = blockDim().x/2
 while i!=0
     if cacheIndex &lt; i
@@ -304,8 +304,8 @@ end</code></pre>
 
 <p>Here, we initialise <code>i</code> as half of the total number of threads in a block. In the first iteration of the while loop, if <code>cacheIndex</code> is less than this number, we add the value stored at <code>cache[cacheIndex + i + 1]</code> to the value of <code>cache[cacheIndex + 1]</code>. Then we synchronise the threads again, divide <code>i</code> by two and enter the second while loop iteration. If you work through this conceptually, you should see that provided the number of threads in a block is an even number, eventually the value at <code>cache[1]</code> will be equal to the sum of all the elements in <code>cache</code>.</p>
 <p>Now we need to write the value of <code>cache[1]</code> to <code>c</code> (remember that we can not directly return the value of <code>cache[1]</code> due to the requirement that the kernel must always return <code>nothing</code>).</p>
-<pre class="codehilite"><code>#cache[1] now contains the sum of vector dot product calculations done in
-#this block, so we write it to c
+<pre class="codehilite"><code># cache[1] now contains the sum of vector dot product calculations done in
+# this block, so we write it to c
 if cacheIndex == 0
     c[blockIdx().x] = cache[1]
 end
@@ -317,38 +317,38 @@ end</code></pre>
 <p>And that's it! We have made it through the kernel. Now all we have to do is run the kernel on a GPU:</p>
 <pre class="codehilite"><code>function main()
 
-    #Initialise variables
+    # Initialise variables
     N::Int64 = 33 * 1024
     threadsPerBlock::Int64 = 256
     blocksPerGrid::Int64 = min(32, (N + threadsPerBlock - 1) / threadsPerBlock)
 
-    #Create a,b and c
+    # Create a,b and c
     a = CuArrays.CuArray(fill(0, N))
     b = CuArrays.CuArray(fill(0, N))
     c = CuArrays.CuArray(fill(0, blocksPerGrid))
 
-    #Fill a and b
+    # Fill a and b
     for i in 1:N
         a[i] = i
         b[i] = 2*i
     end
 
-    #Execute the kernel. Note the shmem argument - this is necessary to allocate
-    #space for the cache we allocate on the gpu with @cuDynamicSharedMem
+    # Execute the kernel. Note the shmem argument - this is necessary to allocate
+    # space for the cache we allocate on the gpu with @cuDynamicSharedMem
     @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
     (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    #Copy c back from the gpu (device) to the host
+    # Copy c back from the gpu (device) to the host
     c = Array(c)
 
     local result = 0
 
-    #Sum the values in c
+    # Sum the values in c
     for i in 1:blocksPerGrid
         result += c[i]
     end
 
-    #Check whether output is correct
+    # Check whether output is correct
     println(&quot;Does GPU value &quot;, result, &quot; = &quot;, 2 * sum_squares(N - 1))
 end
 
@@ -362,7 +362,7 @@ main()</code></pre>
 
 <p>Note that in addition to setting the number of blocks and threads we want the GPU to use, we set a value for <code>shmem</code>. <code>shmem</code> describes the amount of dynamic shared memory we need to allocate for the kernel - see below for more details. Since we use <code>@cuDynamicSharedMem</code> to make an array of size <code>threadsPerBlock</code> full of <code>Int64</code>s in the kernel, we need to allocate <code>(threadsPerBlock * sizeof(Int64)</code> bytes of space in advance when we call <code>@cuda</code>.</p>
 <p>After executing the kernel on GPU, we copy <code>c</code> back to the host (CPU). At this point, <code>c</code> is an array whose length equals the number of blocks in the grid. Each element in <code>c</code> is equal to the sum of the values calculated by the threads in a block. We need to sum the values of <code>c</code> to find the final result of the vector dot product:</p>
-<pre class="codehilite"><code>#Sum the values in c
+<pre class="codehilite"><code># Sum the values in c
 for i in 1:blocksPerGrid
     result += c[i]
 end</code></pre>
@@ -413,13 +413,13 @@ end</code></pre>
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: # fcfcfc"> GitHub</a>
       
       
-        <span><a href="../Vector_addition/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../Vector_addition/" style="color: # fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../Streaming/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../Streaming/" style="color: # fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

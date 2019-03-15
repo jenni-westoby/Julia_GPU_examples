@@ -69,7 +69,7 @@ function onScriptsLoaded () {
       if (lang.length === 1 && lang[0] !== "en" && lunr[lang[0]]) {
         this.use(lunr[lang[0]]);
       } else if (lang.length > 1) {
-        this.use(lunr.multiLanguage.apply(null, lang));  // spread operator not supported in all browsers: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator#Browser_compatibility
+        this.use(lunr.multiLanguage.apply(null, lang));  // spread operator not supported in all browsers: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator# Browser_compatibility
       }
       this.field('title');
       this.field('text');

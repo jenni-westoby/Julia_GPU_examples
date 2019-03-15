@@ -19,8 +19,8 @@ function main()
         b[i] = i * i
     end
 
-    #IMPORTANT NOTE TO SELF
-    #you can pass tuples to represent a grid to blocks, just like in CUDA C <3
+    # IMPORTANT NOTE TO SELF
+    # you can pass tuples to represent a grid to blocks, just like in CUDA C <3
     @cuda blocks=10 add!(a,b,c)
 
     a=Array(a)

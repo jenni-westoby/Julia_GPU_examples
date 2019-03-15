@@ -1,4 +1,4 @@
-#Learn to Develop GPU Software Using Julia
+# Learn to Develop GPU Software Using Julia
 
 A number of packages have been developed for Julia that enable developers to write Julia code that will run on GPUs. But until now, open source documentation which would enable a developer to go from zero CUDA knowledge to making effective use of these packages has not existed. This tutorial aims to change that. In this tutorial, I will guide you through the full workflow of writing a basic program in Julia that will run on GPU. Things you will learn from this tutorial include:
 

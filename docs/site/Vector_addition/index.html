@@ -82,17 +82,17 @@
     <a class="current" href="./">An Introduction to Parallelism</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#an-introduction-to-parallelism">An Introduction to Parallelism</a></li>
+    <li class="toctree-l3"><a href="# an-introduction-to-parallelism">An Introduction to Parallelism</a></li>
     
         <ul>
         
-            <li><a class="toctree-l4" href="#party-time">Party time</a></li>
+            <li><a class="toctree-l4" href="# party-time">Party time</a></li>
         
-            <li><a class="toctree-l4" href="#adding-vectors-on-a-gpu">Adding Vectors on a GPU</a></li>
+            <li><a class="toctree-l4" href="# adding-vectors-on-a-gpu">Adding Vectors on a GPU</a></li>
         
-            <li><a class="toctree-l4" href="#parallelising-over-threads">Parallelising over threads</a></li>
+            <li><a class="toctree-l4" href="# parallelising-over-threads">Parallelising over threads</a></li>
         
-            <li><a class="toctree-l4" href="#parallelising-over-blocks">Parallelising over blocks</a></li>
+            <li><a class="toctree-l4" href="# parallelising-over-blocks">Parallelising over blocks</a></li>
         
         </ul>
     
@@ -196,21 +196,21 @@ end</code></pre>
 <p>We could call add! in a Julia script like this:</p>
 <pre class="codehilite"><code>function main()
 
-    #Make three vectors
+    # Make three vectors
     a = Vector{Any}(fill(undef, 10))
     b = Vector{Any}(fill(undef, 10))
     c = Vector{Any}(fill(undef, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = i
         b[i] = i * 2
     end
 
-    #Fill c with values
+    # Fill c with values
     add!(a,b,c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -247,26 +247,26 @@ end</code></pre>
 <p>Let's see how main has changed in the GPU version of our example.</p>
 <pre class="codehilite"><code>function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -278,7 +278,7 @@ main()</code></pre>
 <p>main() is looking pretty different from the CPU version of our code. Let's work through it step by step.</p>
 <pre class="codehilite"><code>function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))</code></pre>
@@ -286,7 +286,7 @@ main()</code></pre>
 
 <p>Like in the CPU version of main, we start by making three arrays. However here, instead of making three standard Julia arrays, we make three CuArrays. CuArrays are GPU compatible arrays. For reasons we will gloss over here, ordinary Julia arrays would not work in our example. Fortunately, CuArrays are a subtype of AbstractArrays and can often be treated exactly the same way as a normal AbstractArray. Many standard array operations work out of the box on CuArrays, see https://github.com/JuliaGPU/CuArrays.jl for a list. If you are curious why we can't use a normal AbstractArray or Array here, see 'Further Considerations' for details.</p>
 <p>The next step of main is virtually identical to the CPU version.</p>
-<pre class="codehilite"><code>#Fill a and b with values
+<pre class="codehilite"><code># Fill a and b with values
 for i in 1:10
     a[i] = i
     b[i] = i * 2
@@ -295,13 +295,13 @@ end</code></pre>
 
 <p>The only thing to note here is that like I promised, we can treat a and b exactly like an ordinary AbstractArray here, no special syntax is required.</p>
 <p>In the next step we actually execute the kernel:</p>
-<pre class="codehilite"><code>#Execute the kernel
+<pre class="codehilite"><code># Execute the kernel
 @cuda add!(a,b,c)</code></pre>
 
 
 <p>This looks remarkably similar to the CPU version of main at this step, especially when you consider that this line is responsible for executing add! on a different type of computing chip. The magic is contained in <code>@cuda</code>. <code>@cuda</code> is part of the CUDAnative package, and behind the scenes is responsible for transforming the add! function into a form recognised and executed by the GPU.</p>
 <p>If you are familiar with CUDA C or C++, you might be surprised that main does not include any step to copy a, b and c from the host (CPU) to the device (GPU). This is taken care of behind the scenes by CUDAnative and CuArrays. However, you do explicitly need to copy your CuArrays back from device (GPU) to host (CPU), which is what happens in the next step of main:</p>
-<pre class="codehilite"><code>#Copy a,b and c back from the device to the host
+<pre class="codehilite"><code># Copy a,b and c back from the device to the host
 a = Array(a)
 b = Array(b)
 c = Array(c)</code></pre>
@@ -309,7 +309,7 @@ c = Array(c)</code></pre>
 
 <p>The function responsible for copying your CuArrays from device to host is <code>Array()</code>.</p>
 <p>Finally, we do the same sanity check as in the CPU version of main and make a function call to main:</p>
-<pre class="codehilite"><code>    #Do a sanity check
+<pre class="codehilite"><code>    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -324,26 +324,26 @@ main()</code></pre>
 <p>Let's see how main changes when we run the kernel over multiple threads:</p>
 <pre class="codehilite"><code>function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda threads=10 add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -404,26 +404,26 @@ end
 
 function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda blocks=10 add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -468,13 +468,13 @@ main()</code></pre>
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: # fcfcfc"> GitHub</a>
       
       
-        <span><a href="../Setup_Julia/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../Setup_Julia/" style="color: # fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../Vector_dot_product/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../Vector_dot_product/" style="color: # fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

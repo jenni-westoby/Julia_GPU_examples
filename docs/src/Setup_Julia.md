@@ -1,4 +1,4 @@
-#Set-up Julia
+# Set-up Julia
 
 This section assumes that you have already carried out the instructions in 'Accessing GPUs' and that you now have access to a machine which
 
@@ -22,7 +22,7 @@ add CuArrays
 
 Note - this step is likely to fail if you do not have a working CUDA installation.
 
-#Common Problems
+# Common Problems
 
 **I'm sure I installed the CUDA toolkit correctly yesterday but now nothing is working!**
 

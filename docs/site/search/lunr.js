@@ -1521,7 +1521,7 @@ lunr.TokenSet.prototype.intersect = function (b) {
   while (stack.length) {
     frame = stack.pop()
 
-    // NOTE: As with the #toString method, we are using
+    // NOTE: As with the # toString method, we are using
     // Object.keys and a for loop instead of a for-in loop
     // as both of these objects enter 'hash' mode, causing
     // the function to be de-optimised in V8
@@ -1724,7 +1724,7 @@ lunr.Index = function (attrs) {
  * Results will be returned sorted by their score, the most relevant results
  * will be returned first.
  *
- * For more programmatic querying use lunr.Index#query.
+ * For more programmatic querying use lunr.Index# query.
  *
  * @param {lunr.Index~QueryString} queryString - A string containing a lunr query.
  * @throws {lunr.QueryParseError} If the passed query string cannot be parsed.
@@ -1750,7 +1750,7 @@ lunr.Index.prototype.search = function (queryString) {
  * Performs a query against the index using the yielded lunr.Query object.
  *
  * If performing programmatic queries against the index, this method is preferred
- * over lunr.Index#search so as to avoid the additional query parsing overhead.
+ * over lunr.Index# search so as to avoid the additional query parsing overhead.
  *
  * A query object is yielded to the supplied function which should be used to
  * express the query to be run against the index.
@@ -2342,7 +2342,7 @@ lunr.MatchData = function (term, field, metadata) {
   // being mutated during match data combination.
   // Metadata is kept in an array within the inverted
   // index so cloning the data can be done with
-  // Array#slice
+  // Array# slice
   for (var i = 0; i < metadataKeys.length; i++) {
     var key = metadataKeys[i]
     clonedMetadata[key] = metadata[key].slice()
@@ -2430,7 +2430,7 @@ lunr.MatchData.prototype.add = function (term, field, metadata) {
  * A lunr.Query provides a programmatic way of defining queries to be performed
  * against a {@link lunr.Index}.
  *
- * Prefer constructing a lunr.Query using the {@link lunr.Index#query} method
+ * Prefer constructing a lunr.Query using the {@link lunr.Index# query} method
  * so the query object is pre-initialized with the right index fields.
  *
  * @constructor
@@ -2456,8 +2456,8 @@ lunr.Query = function (allFields) {
  * @property {number} wildcard.LEADING - Prepend the term with a wildcard, unless a leading wildcard already exists
  * @property {number} wildcard.TRAILING - Append a wildcard to the term, unless a trailing wildcard already exists
  * @see lunr.Query~Clause
- * @see lunr.Query#clause
- * @see lunr.Query#term
+ * @see lunr.Query# clause
+ * @see lunr.Query# term
  * @example <caption>query term with trailing wildcard</caption>
  * query.term('foo', { wildcard: lunr.Query.wildcard.TRAILING })
  * @example <caption>query term with leading and trailing wildcard</caption>
@@ -2529,7 +2529,7 @@ lunr.Query.prototype.clause = function (clause) {
  * @param {string} term - The term to add to the query.
  * @param {Object} [options] - Any additional properties to add to the query clause.
  * @returns {lunr.Query}
- * @see lunr.Query#clause
+ * @see lunr.Query# clause
  * @see lunr.Query~Clause
  * @example <caption>adding a single term to a query</caption>
  * query.term("foo")

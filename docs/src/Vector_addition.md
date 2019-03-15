@@ -1,8 +1,8 @@
-#An Introduction to Parallelism
+# An Introduction to Parallelism
 
 Congratulations! You (finally?) got your environment set up and are ready to start writing some GPU code. If this took you less than a week you should probably throw yourself a party.
 
-##Party time
+# Party time
 
 We're going to start our GPU adventure by considering a very simple program which adds two vectors together. If we wanted to do this on a CPU, we might write a function like this:
 
@@ -23,21 +23,21 @@ We could call add! in a Julia script like this:
 ```
 function main()
 
-    #Make three vectors
+    # Make three vectors
     a = Vector{Any}(fill(undef, 10))
     b = Vector{Any}(fill(undef, 10))
     c = Vector{Any}(fill(undef, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = i
         b[i] = i * 2
     end
 
-    #Fill c with values
+    # Fill c with values
     add!(a,b,c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -48,7 +48,7 @@ main()
 
 main() is a very simple function that makes three vectors, a, b and c. It populates a and b with values, calls add! to add each value in a and b together, then runs a for loop to check that the values stored in c make sense.
 
-##Adding Vectors on a GPU
+# Adding Vectors on a GPU
 
 As exciting as the example above was, the eagle eyed amongst you may have noticed that it doesn't actually run on a GPU. Let's fix that.
 
@@ -89,26 +89,26 @@ Let's see how main has changed in the GPU version of our example.
 ```
 function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -122,7 +122,7 @@ main() is looking pretty different from the CPU version of our code. Let's work 
 ```
 function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
@@ -133,7 +133,7 @@ Like in the CPU version of main, we start by making three arrays. However here, 
 The next step of main is virtually identical to the CPU version.
 
 ```
-#Fill a and b with values
+# Fill a and b with values
 for i in 1:10
     a[i] = i
     b[i] = i * 2
@@ -145,7 +145,7 @@ The only thing to note here is that like I promised, we can treat a and b exactl
 In the next step we actually execute the kernel:
 
 ```
-#Execute the kernel
+# Execute the kernel
 @cuda add!(a,b,c)
 ```
 
@@ -154,7 +154,7 @@ This looks remarkably similar to the CPU version of main at this step, especiall
 If you are familiar with CUDA C or C++, you might be surprised that main does not include any step to copy a, b and c from the host (CPU) to the device (GPU). This is taken care of behind the scenes by CUDAnative and CuArrays. However, you do explicitly need to copy your CuArrays back from device (GPU) to host (CPU), which is what happens in the next step of main:
 
 ```
-#Copy a,b and c back from the device to the host
+# Copy a,b and c back from the device to the host
 a = Array(a)
 b = Array(b)
 c = Array(c)
@@ -165,7 +165,7 @@ The function responsible for copying your CuArrays from device to host is ```Arr
 Finally, we do the same sanity check as in the CPU version of main and make a function call to main:
 
 ```
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -178,33 +178,33 @@ Note that in both versions of main, the sanity check is carried out on the host 
 
 So we've written our first Julia script that will execute on a GPU! That's pretty cool. But again, the eagle eyed amongst you might be grumbling. Whilst our script does run on a GPU, there is absolutely no parallelism in it. In fact, it is likely that the GPU version of our script is actually slower than the CPU version, given that GPU processors are generally slower than CPU processors AND we had to copy a load of data from host to device and back again in the GPU version, which we didn't have to bother with in the CPU version. Time to introduce some parallelism to our script.
 
-##Parallelising over threads
+# Parallelising over threads
 
 Let's see how main changes when we run the kernel over multiple threads:
 
 ```
 function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda threads=10 add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -248,7 +248,7 @@ tid = threadIdx().x
 We spawn 10 threads and on each thread one element of c is calculated. Clearly this will be a lot faster than calculating all 10 elements sequentially.
 
 
-##Parallelising over blocks
+# Parallelising over blocks
 
 You will recall from "Some Background on GPUs" that GPUs are composed of blocks of threads. In addition to parallelising our code over threads, we have the option of parallelising over blocks. To parallelise over blocks instead of threads, we change this line in main
 
@@ -287,26 +287,26 @@ end
 
 function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda blocks=10 add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end

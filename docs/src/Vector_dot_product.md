@@ -1,8 +1,8 @@
-#Health Warning: Types
+# Health Warning: Types
 
 The vector addition example in the previous section was written in fairly high level code. We didn't have to think about memory allocation or even types. As we move on to more involved examples in this section and beyond, this is increasingly going to change. Julia has an optional types system, which in normal Julia usage often means that in practice you can ignore that types exist. It is often not possible to ignore types in Julia GPU programming. If you are a bit hazy about what types are, I recommend doing a bit of background reading from the Julia manual before proceeding. I will assume you know what types are here.
 
-#Shared Memory and Synchronisation
+# Shared Memory and Synchronisation
 
 Following our example of vector addition in the previous section, you may be left wondering what the point of making a distinction between blocks and threads is. This section should make this clear.
 
@@ -21,7 +21,7 @@ In the code we wrote for vector addition, we did not use shared memory. Instead 
 
 Of course, there is an obvious potential disadvantage to using shared memory. Giving multiple threads the capability to read and write from the same memory is potentially powerful. However it is also potentially dangerous. Now it is possible for threads to try to write to the same location in memory simultaneously. If we want there to be a dependency between threads, where thread A reads the results written by thread B, there is no automatic guarantee that thread A will not try to read the results before thread B has written them. We need a method to synchronise threads so this type of situation can be avoided. Fortunately, such a method exists as part of CUDAnative.
 
-##Vector Dot Product
+# Vector Dot Product
 
 We will use a vector dot product to explore some of the ideas introduced above. A vector dot product is when each of the elements of a vector is multiplied by the corresponding element in a second vector. Then, all of the multiplied elements are added together to give a single number as a result.
 
@@ -36,27 +36,27 @@ Next, we need to write the kernel. It is a lot to take in, but don't worry, we w
 ```
 function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    #Set up shared memory cache for this current block.
+    # Set up shared memory cache for this current block.
     cache = @cuDynamicSharedMem(Int64, threadsPerBlock)
 
-    #Initialise some variables.
+    # Initialise some variables.
     tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
     cacheIndex = threadIdx().x - 1
     temp::Int64 = 0
 
-    #Iterate over vector to do dot product in parallel way
+    # Iterate over vector to do dot product in parallel way
     while tid < N
         temp += a[tid + 1] * b[tid + 1]
         tid += blockDim().x * gridDim().x
     end
 
-    #set cache values
+    # set cache values
     cache[cacheIndex + 1] = temp
 
-    #synchronise threads
+    # synchronise threads
     sync_threads()
 
-    #In the step below, we add up all of the values stored in the cache
+    # In the step below, we add up all of the values stored in the cache
     i::Int = blockDim().x/2
     while i!=0
         if cacheIndex < i
@@ -66,8 +66,8 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
         i/=2
     end
 
-    #cache[1] now contains the sum of vector dot product calculations done in
-    #this block, so we write it to c
+    # cache[1] now contains the sum of vector dot product calculations done in
+    # this block, so we write it to c
     if cacheIndex == 0
         c[blockIdx().x] = cache[1]
     end
@@ -81,7 +81,7 @@ This is more complicated than the vector addition kernel, so let's work through 
 ```
 function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    #Set up shared memory cache for this current block.
+    # Set up shared memory cache for this current block.
     cache = @cuDynamicSharedMem(Int64, threadsPerBlock)
 ```
 
@@ -96,7 +96,7 @@ allocates an array in shared memory with the dimensions ```threadsPerBlock```, w
 So now we have an array of size ```threadsPerBlock``` in shared memory which we can fill with ```Int64```s. Next we set the value of the thread index (```tid```):
 
 ```
-#Initialise some variables.
+# Initialise some variables.
 tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
 ```
 
@@ -120,7 +120,7 @@ temp::Int64 = 0
 Now we are ready to start calculating the dot product:
 
 ```
-#Iterate over vector to do dot product in parallel way
+# Iterate over vector to do dot product in parallel way
 while tid < N
     temp += a[tid + 1] * b[tid + 1]
     tid += blockDim().x * gridDim().x
@@ -132,7 +132,7 @@ For context, ```N``` is the number of elements in ```a``` (which is the same as 
 After exiting the while loop, we write the value calculated in temp to shared memory:
 
 ```
-#set cache values
+# set cache values
 cache[cacheIndex + 1] = temp
 ```
 
@@ -145,7 +145,7 @@ In the next step of the kernel, we want to sum up all the values stored in share
 Doesn't mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:
 
 ```
-#synchronise threads
+# synchronise threads
 sync_threads()
 ```
 
@@ -154,7 +154,7 @@ When each thread reaches this line, it pauses in its execution of the kernel unt
 Now all the threads have written to shared memory, we are ready to sum the elements of cache:
 
 ```
-#In the step below, we add up all of the values stored in the cache
+# In the step below, we add up all of the values stored in the cache
 i::Int = blockDim().x/2
 while i!=0
     if cacheIndex < i
@@ -170,8 +170,8 @@ Here, we initialise ```i``` as half of the total number of threads in a block. I
 Now we need to write the value of ```cache[1]``` to ```c``` (remember that we can not directly return the value of ```cache[1]``` due to the requirement that the kernel must always return ```nothing```).
 
 ```
-#cache[1] now contains the sum of vector dot product calculations done in
-#this block, so we write it to c
+# cache[1] now contains the sum of vector dot product calculations done in
+# this block, so we write it to c
 if cacheIndex == 0
     c[blockIdx().x] = cache[1]
 end
@@ -185,38 +185,38 @@ And that's it! We have made it through the kernel. Now all we have to do is run 
 ```
 function main()
 
-    #Initialise variables
+    # Initialise variables
     N::Int64 = 33 * 1024
     threadsPerBlock::Int64 = 256
     blocksPerGrid::Int64 = min(32, (N + threadsPerBlock - 1) / threadsPerBlock)
 
-    #Create a,b and c
+    # Create a,b and c
     a = CuArrays.CuArray(fill(0, N))
     b = CuArrays.CuArray(fill(0, N))
     c = CuArrays.CuArray(fill(0, blocksPerGrid))
 
-    #Fill a and b
+    # Fill a and b
     for i in 1:N
         a[i] = i
         b[i] = 2*i
     end
 
-    #Execute the kernel. Note the shmem argument - this is necessary to allocate
-    #space for the cache we allocate on the gpu with @cuDynamicSharedMem
+    # Execute the kernel. Note the shmem argument - this is necessary to allocate
+    # space for the cache we allocate on the gpu with @cuDynamicSharedMem
     @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
     (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    #Copy c back from the gpu (device) to the host
+    # Copy c back from the gpu (device) to the host
     c = Array(c)
 
     local result = 0
 
-    #Sum the values in c
+    # Sum the values in c
     for i in 1:blocksPerGrid
         result += c[i]
     end
 
-    #Check whether output is correct
+    # Check whether output is correct
     println("Does GPU value ", result, " = ", 2 * sum_squares(N - 1))
 end
 
@@ -236,7 +236,7 @@ Note that in addition to setting the number of blocks and threads we want the GP
 After executing the kernel on GPU, we copy ```c``` back to the host (CPU). At this point, ```c``` is an array whose length equals the number of blocks in the grid. Each element in ```c``` is equal to the sum of the values calculated by the threads in a block. We need to sum the values of ```c``` to find the final result of the vector dot product:
 
 ```
-#Sum the values in c
+# Sum the values in c
 for i in 1:blocksPerGrid
     result += c[i]
 end
@@ -252,7 +252,7 @@ end
 
 And that is it! We now have a complete Julia script which calculates a vector dot product on a GPU, making use of shared memory and synchronisation. In the next section, we will discuss streaming.
 
-##A Note on Static and Dynamic Allocation
+# A Note on Static and Dynamic Allocation
 
 In the first line of the kernel, we call ```@cuDynamicSharedMem```. ```@cuDynamicSharedMem``` has a sister function, ```@cuStaticSharedMem```. Like ```@cuDynamicSharedMem```, ```@cuStaticSharedMem``` allocates arrays in shared memory. However unlike ```@cuDynamicSharedMem```, ```@cuStaticSharedMem``` allocates arrays statically rather than dynamically. Memory that is statically allocated is allocated at compilation time, whereas memory that is dynamically allocated is allocated at program execution. We used ```@cuDynamicSharedMem``` in our example because one of the command line arguments for ```@cuDynamicSharedMem``` was a kernel command line argument (```threadsPerBlock```). Because the value of the kernel command line argument is not known at compilation time, dynamic rather than static memory allocation was required.
 

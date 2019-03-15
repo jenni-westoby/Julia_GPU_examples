@@ -1,7 +1,7 @@
 
 <a id='Accessing-GPUs-1'></a>
 
-# Accessing GPUs
+#  Accessing GPUs
 
 
 You basically have three options for accessing GPUs:
@@ -12,19 +12,19 @@ You basically have three options for accessing GPUs:
 3. Use the GPU in your own computer
 
 
-##Option 1
+# Option 1
 
 
 If you are going for option 1, the cloud based platform you are using should have instructions for how to gain access to the GPUs you are paying for. It is quite likely that the cloud based platform will already have the CUDA toolkit installed, so once you have managed to log in you are probably good to go!
 
 
-##Option 2
+# Option 2
 
 
 If you are going for option 2, talk to the HPC administrator to find out how to get access to the GPUs and check that the CUDA toolkit are already installed.
 
 
-##Option 3
+# Option 3
 
 
 If you are going for option 3, things are about to get interesting.
@@ -81,7 +81,7 @@ If your install has worked, the final command should print out some version info
 **Disclaimer** I am writing these instructions in spring 2019. If you are reading this disclaimer and the year is 2021 or greater, these instructions may be woefully out of date and better ignored.
 
 
-##Surely I don't really need to install a new operating system
+# Surely I don't really need to install a new operating system
 
 
 The CUDA toolkit and drivers are notoriously difficult to install. It might sound a bit mad, but installing a fresh version of Ubuntu 18.04 is the most reliable method for installing CUDA that I have found. Note, steps 4-6 are taken from the second answer here: https://askubuntu.com/questions/1028830/how-do-i-install-cuda-on-ubuntu-18-04, so a big thank you to eromod and N0rbert.
