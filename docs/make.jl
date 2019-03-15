@@ -18,7 +18,4 @@ pages = Any[
 "Further Reading" => "Further_Reading.md",
 "About the Author" => "About_the_author.md"])
 
-deploydocs(deps   = nothing,
-repo = "github.com/jenni-westoby/Julia_GPU_examples.jl.git",
-julia  = "1.0.3",
-osname = "linux")
+deploydocs(repo = "github.com/jenni-westoby/Julia_GPU_examples.jl.git")
