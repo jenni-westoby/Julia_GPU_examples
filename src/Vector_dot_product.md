@@ -12,7 +12,7 @@ Put a pretty picture here.
 
 In addition to threads, each block contains 'shared memory'. Shared memory is memory which can be read and written to by all the threads in a given block. Shared memory can't be accessed by threads not in the specified block. This is illustrated in the diagram below.
 
-Another pretty picture.
+![alt text](images/gpu_memory_layout.png)
 
 In the code we wrote for vector addition, we did not use shared memory. Instead we used global memory. Global memory can be accessed from all threads, regardless of what block they live in, but has the disadvantage of taking a lot longer to read from compared with shared memory. There are two main reasons we might use shared memory in a program:
 
