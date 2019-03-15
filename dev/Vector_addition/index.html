@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>- · Julia_GPU_examples.</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Julia_GPU_examples.</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><span class="toctext">Getting Started</span><ul><li><a class="toctext" href="../GPU_background/">-</a></li><li><a class="toctext" href="../Accessing_GPUs/">Accessing GPUs</a></li><li><a class="toctext" href="../Setup_Julia/">-</a></li></ul></li><li><span class="toctext">Developing With GPUs</span><ul><li class="current"><a class="toctext" href>-</a><ul class="internal"></ul></li><li><a class="toctext" href="../Vector_dot_product/">-</a></li><li><a class="toctext" href="../Streaming/">-</a></li></ul></li><li><span class="toctext">Performance</span><ul><li><a class="toctext" href="../Profiling/">-</a></li><li><a class="toctext" href="../Performance_thoughts/">-</a></li></ul></li><li><a class="toctext" href="../Summary/">Summary</a></li><li><a class="toctext" href="../Further_Reading/">Further Reading</a></li><li><a class="toctext" href="../About_the_author/">About the Author</a></li></ul></nav><article id="docs"><header><nav><ul><li>Developing With GPUs</li><li><a href>-</a></li></ul><a class="edit-page" href="github.com/jenni-westoby/Julia_GPU_examples.git"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>-</span><a class="fa fa-bars" href="#"></a></div></header><p>#An Introduction to Parallelism</p><p>Congratulations! You (finally?) got your environment set up and are ready to start writing some GPU code. If this took you less than a week you should probably throw yourself a party.</p><p>##Party time</p><p>We&#39;re going to start our GPU adventure by considering a very simple program which adds two vectors together. If we wanted to do this on a CPU, we might write a function like this:</p><pre><code class="language-none">function add!(a,b,c)
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>An Introduction to Parallelism · Julia_GPU_examples.</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Julia_GPU_examples.</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><span class="toctext">Getting Started</span><ul><li><a class="toctext" href="../GPU_background/">Some Background on GPUs</a></li><li><a class="toctext" href="../Accessing_GPUs/">Accessing GPUs</a></li><li><a class="toctext" href="../Setup_Julia/">Set-up Julia</a></li></ul></li><li><span class="toctext">Developing With GPUs</span><ul><li class="current"><a class="toctext" href>An Introduction to Parallelism</a><ul class="internal"><li class="toplevel"><a class="toctext" href="#Party-time-1">Party time</a></li><li class="toplevel"><a class="toctext" href="#Adding-Vectors-on-a-GPU-1">Adding Vectors on a GPU</a></li><li class="toplevel"><a class="toctext" href="#Parallelising-over-threads-1">Parallelising over threads</a></li><li class="toplevel"><a class="toctext" href="#Parallelising-over-blocks-1">Parallelising over blocks</a></li></ul></li><li><a class="toctext" href="../Vector_dot_product/">Health Warning: Types</a></li><li><a class="toctext" href="../Streaming/">Streaming</a></li></ul></li><li><span class="toctext">Performance</span><ul><li><a class="toctext" href="../Profiling/">Profiling</a></li><li><a class="toctext" href="../Performance_thoughts/">Thoughts on Performance</a></li></ul></li><li><a class="toctext" href="../Summary/">Summary</a></li><li><a class="toctext" href="../Further_Reading/">Further Reading</a></li><li><a class="toctext" href="../About_the_author/">About the Author</a></li></ul></nav><article id="docs"><header><nav><ul><li>Developing With GPUs</li><li><a href>An Introduction to Parallelism</a></li></ul><a class="edit-page" href="github.com/jenni-westoby/Julia_GPU_examples.git"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>An Introduction to Parallelism</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="An-Introduction-to-Parallelism-1" href="#An-Introduction-to-Parallelism-1">An Introduction to Parallelism</a></h1><p>Congratulations! You (finally?) got your environment set up and are ready to start writing some GPU code. If this took you less than a week you should probably throw yourself a party.</p><h1><a class="nav-anchor" id="Party-time-1" href="#Party-time-1">Party time</a></h1><p>We&#39;re going to start our GPU adventure by considering a very simple program which adds two vectors together. If we wanted to do this on a CPU, we might write a function like this:</p><pre><code class="language-none">function add!(a,b,c)
     local tid = 1
     while (tid &lt;= min(length(a), length(b), length(c)))
         c[tid] = a[tid] + b[tid]
@@ -7,27 +7,27 @@
     end
 end</code></pre><p>The function add! takes three vectors (a, b and c), adds each element of a and b together and stores the result in c. Note that we do not explicitly return c, because the exclamation mark at the end of add! indicates that add! is a function that modifies it&#39;s arguments.</p><p>We could call add! in a Julia script like this:</p><pre><code class="language-none">function main()
 
-    #Make three vectors
+    # Make three vectors
     a = Vector{Any}(fill(undef, 10))
     b = Vector{Any}(fill(undef, 10))
     c = Vector{Any}(fill(undef, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = i
         b[i] = i * 2
     end
 
-    #Fill c with values
+    # Fill c with values
     add!(a,b,c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
 end
 
-main()</code></pre><p>main() is a very simple function that makes three vectors, a, b and c. It populates a and b with values, calls add! to add each value in a and b together, then runs a for loop to check that the values stored in c make sense.</p><p>##Adding Vectors on a GPU</p><p>As exciting as the example above was, the eagle eyed amongst you may have noticed that it doesn&#39;t actually run on a GPU. Let&#39;s fix that.</p><p>The first thing we need to do is load packages that will enable us to run Julia code on GPUs.</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv</code></pre><p>CuArrays is a package that allows us to easily transfer arrays from CPU to GPU. CUDAnative allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call CUDAdrv in our example, but much of CUDAnative depends on CUDAdrv to work.</p><p>Next, we need to identify what part of our example could benefit from being ported to GPU. Since most of the actual work is being done in add!, this is an obvious target. Let&#39;s modify add! so that it could be executed on a GPU.</p><pre><code class="language-none">function add!(a,b,c)
+main()</code></pre><p>main() is a very simple function that makes three vectors, a, b and c. It populates a and b with values, calls add! to add each value in a and b together, then runs a for loop to check that the values stored in c make sense.</p><h1><a class="nav-anchor" id="Adding-Vectors-on-a-GPU-1" href="#Adding-Vectors-on-a-GPU-1">Adding Vectors on a GPU</a></h1><p>As exciting as the example above was, the eagle eyed amongst you may have noticed that it doesn&#39;t actually run on a GPU. Let&#39;s fix that.</p><p>The first thing we need to do is load packages that will enable us to run Julia code on GPUs.</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv</code></pre><p>CuArrays is a package that allows us to easily transfer arrays from CPU to GPU. CUDAnative allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call CUDAdrv in our example, but much of CUDAnative depends on CUDAdrv to work.</p><p>Next, we need to identify what part of our example could benefit from being ported to GPU. Since most of the actual work is being done in add!, this is an obvious target. Let&#39;s modify add! so that it could be executed on a GPU.</p><pre><code class="language-none">function add!(a,b,c)
     local tid = 1
     while (tid &lt;= min(length(a), length(b), length(c)))
         c[tid] = a[tid] + b[tid]
@@ -37,26 +37,26 @@ main()</code></pre><p>main() is a very simple function that makes three vectors,
 end
 </code></pre><p>Since add! is now ready to run on a GPU, we have thus transformed add! from an ordinary function to a kernel. Isn&#39;t unnecessary terminology wonderful?</p><p>Aside from now referring to add! as a kernel rather than a function, the only thing that has changed between the CPU and GPU version of add! is the addition of this line:</p><pre><code class="language-none">return nothing</code></pre><p>CUDA requires that kernels must return nothing. Aside from meaning that we have to add this line to all of our kernels, this also means we potentially have to think a bit about how we will get the results of our GPU computations out of our kernels, since we can&#39;t directly <code>return</code> our results. As add! is a function which alters its arguments, this is not actually a problem which requires much thought in our example.</p><p>Let&#39;s see how main has changed in the GPU version of our example.</p><pre><code class="language-none">function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -64,45 +64,45 @@ end
 
 main()</code></pre><p>main() is looking pretty different from the CPU version of our code. Let&#39;s work through it step by step.</p><pre><code class="language-none">function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
-    c = CuArrays.CuArray(fill(0, 10))</code></pre><p>Like in the CPU version of main, we start by making three arrays. However here, instead of making three standard Julia arrays, we make three CuArrays. CuArrays are GPU compatible arrays. For reasons we will gloss over here, ordinary Julia arrays would not work in our example. Fortunately, CuArrays are a subtype of AbstractArrays and can often be treated exactly the same way as a normal AbstractArray. Many standard array operations work out of the box on CuArrays, see https://github.com/JuliaGPU/CuArrays.jl for a list. If you are curious why we can&#39;t use a normal AbstractArray or Array here, see &#39;Further Considerations&#39; for details.</p><p>The next step of main is virtually identical to the CPU version.</p><pre><code class="language-none">#Fill a and b with values
+    c = CuArrays.CuArray(fill(0, 10))</code></pre><p>Like in the CPU version of main, we start by making three arrays. However here, instead of making three standard Julia arrays, we make three CuArrays. CuArrays are GPU compatible arrays. For reasons we will gloss over here, ordinary Julia arrays would not work in our example. Fortunately, CuArrays are a subtype of AbstractArrays and can often be treated exactly the same way as a normal AbstractArray. Many standard array operations work out of the box on CuArrays, see https://github.com/JuliaGPU/CuArrays.jl for a list. If you are curious why we can&#39;t use a normal AbstractArray or Array here, see &#39;Further Considerations&#39; for details.</p><p>The next step of main is virtually identical to the CPU version.</p><pre><code class="language-none"># Fill a and b with values
 for i in 1:10
     a[i] = i
     b[i] = i * 2
-end</code></pre><p>The only thing to note here is that like I promised, we can treat a and b exactly like an ordinary AbstractArray here, no special syntax is required.</p><p>In the next step we actually execute the kernel:</p><pre><code class="language-none">#Execute the kernel
-@cuda add!(a,b,c)</code></pre><p>This looks remarkably similar to the CPU version of main at this step, especially when you consider that this line is responsible for executing add! on a different type of computing chip. The magic is contained in <code>@cuda</code>. <code>@cuda</code> is part of the CUDAnative package, and behind the scenes is responsible for transforming the add! function into a form recognised and executed by the GPU.</p><p>If you are familiar with CUDA C or C++, you might be surprised that main does not include any step to copy a, b and c from the host (CPU) to the device (GPU). This is taken care of behind the scenes by CUDAnative and CuArrays. However, you do explicitly need to copy your CuArrays back from device (GPU) to host (CPU), which is what happens in the next step of main:</p><pre><code class="language-none">#Copy a,b and c back from the device to the host
+end</code></pre><p>The only thing to note here is that like I promised, we can treat a and b exactly like an ordinary AbstractArray here, no special syntax is required.</p><p>In the next step we actually execute the kernel:</p><pre><code class="language-none"># Execute the kernel
+@cuda add!(a,b,c)</code></pre><p>This looks remarkably similar to the CPU version of main at this step, especially when you consider that this line is responsible for executing add! on a different type of computing chip. The magic is contained in <code>@cuda</code>. <code>@cuda</code> is part of the CUDAnative package, and behind the scenes is responsible for transforming the add! function into a form recognised and executed by the GPU.</p><p>If you are familiar with CUDA C or C++, you might be surprised that main does not include any step to copy a, b and c from the host (CPU) to the device (GPU). This is taken care of behind the scenes by CUDAnative and CuArrays. However, you do explicitly need to copy your CuArrays back from device (GPU) to host (CPU), which is what happens in the next step of main:</p><pre><code class="language-none"># Copy a,b and c back from the device to the host
 a = Array(a)
 b = Array(b)
-c = Array(c)</code></pre><p>The function responsible for copying your CuArrays from device to host is <code>Array()</code>.</p><p>Finally, we do the same sanity check as in the CPU version of main and make a function call to main:</p><pre><code class="language-none">    #Do a sanity check
+c = Array(c)</code></pre><p>The function responsible for copying your CuArrays from device to host is <code>Array()</code>.</p><p>Finally, we do the same sanity check as in the CPU version of main and make a function call to main:</p><pre><code class="language-none">    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
 end
 
-main()</code></pre><p>Note that in both versions of main, the sanity check is carried out on the host (CPU), not the device (GPU).</p><p>So we&#39;ve written our first Julia script that will execute on a GPU! That&#39;s pretty cool. But again, the eagle eyed amongst you might be grumbling. Whilst our script does run on a GPU, there is absolutely no parallelism in it. In fact, it is likely that the GPU version of our script is actually slower than the CPU version, given that GPU processors are generally slower than CPU processors AND we had to copy a load of data from host to device and back again in the GPU version, which we didn&#39;t have to bother with in the CPU version. Time to introduce some parallelism to our script.</p><p>##Parallelising over threads</p><p>Let&#39;s see how main changes when we run the kernel over multiple threads:</p><pre><code class="language-none">function main()
+main()</code></pre><p>Note that in both versions of main, the sanity check is carried out on the host (CPU), not the device (GPU).</p><p>So we&#39;ve written our first Julia script that will execute on a GPU! That&#39;s pretty cool. But again, the eagle eyed amongst you might be grumbling. Whilst our script does run on a GPU, there is absolutely no parallelism in it. In fact, it is likely that the GPU version of our script is actually slower than the CPU version, given that GPU processors are generally slower than CPU processors AND we had to copy a load of data from host to device and back again in the GPU version, which we didn&#39;t have to bother with in the CPU version. Time to introduce some parallelism to our script.</p><h1><a class="nav-anchor" id="Parallelising-over-threads-1" href="#Parallelising-over-threads-1">Parallelising over threads</a></h1><p>Let&#39;s see how main changes when we run the kernel over multiple threads:</p><pre><code class="language-none">function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda threads=10 add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
@@ -114,7 +114,7 @@ main()</code></pre><p>The only line that has changed is this line:</p><pre><code
         c[tid] = a[tid] + b[tid]
     end
     return nothing
-end</code></pre><p>Again, we have only changed one line:</p><pre><code class="language-none">tid = threadIdx().x</code></pre><p><code>threadIdx()</code> is a function from CUDAnative which returns the three dimensional index of the thread that this particular instance of the kernel is running on. Here, we use <code>threadIdx().x</code> to get the x coordinate for the thread the kernel is running on. As we specified in our call to <code>@cuda</code> that we would use 10 threads, the value of threadIdx().x will be between 1 and 10 for each instance of the kernel. Therefore, when we call</p><pre><code class="language-none">@cuda threads=10 add!(a,b,c)</code></pre><p>We spawn 10 threads and on each thread one element of c is calculated. Clearly this will be a lot faster than calculating all 10 elements sequentially.</p><p>##Parallelising over blocks</p><p>You will recall from &quot;Some Background on GPUs&quot; that GPUs are composed of blocks of threads. In addition to parallelising our code over threads, we have the option of parallelising over blocks. To parallelise over blocks instead of threads, we change this line in main</p><pre><code class="language-none">@cuda threads=10 add!(a,b,c)</code></pre><p>to</p><pre><code class="language-none">@cuda blocks=10 add!(a,b,c)</code></pre><p>and change this line in add!</p><pre><code class="language-none">tid = threadIdx().x</code></pre><p>to</p><pre><code class="language-none">tid = blockIdx().x</code></pre><p>And now our code parallelises over blocks rather than threads! The complete script to parallelise over blocks is below:</p><pre><code class="language-none">function add!(a,b,c)
+end</code></pre><p>Again, we have only changed one line:</p><pre><code class="language-none">tid = threadIdx().x</code></pre><p><code>threadIdx()</code> is a function from CUDAnative which returns the three dimensional index of the thread that this particular instance of the kernel is running on. Here, we use <code>threadIdx().x</code> to get the x coordinate for the thread the kernel is running on. As we specified in our call to <code>@cuda</code> that we would use 10 threads, the value of threadIdx().x will be between 1 and 10 for each instance of the kernel. Therefore, when we call</p><pre><code class="language-none">@cuda threads=10 add!(a,b,c)</code></pre><p>We spawn 10 threads and on each thread one element of c is calculated. Clearly this will be a lot faster than calculating all 10 elements sequentially.</p><h1><a class="nav-anchor" id="Parallelising-over-blocks-1" href="#Parallelising-over-blocks-1">Parallelising over blocks</a></h1><p>You will recall from &quot;Some Background on GPUs&quot; that GPUs are composed of blocks of threads. In addition to parallelising our code over threads, we have the option of parallelising over blocks. To parallelise over blocks instead of threads, we change this line in main</p><pre><code class="language-none">@cuda threads=10 add!(a,b,c)</code></pre><p>to</p><pre><code class="language-none">@cuda blocks=10 add!(a,b,c)</code></pre><p>and change this line in add!</p><pre><code class="language-none">tid = threadIdx().x</code></pre><p>to</p><pre><code class="language-none">tid = blockIdx().x</code></pre><p>And now our code parallelises over blocks rather than threads! The complete script to parallelise over blocks is below:</p><pre><code class="language-none">function add!(a,b,c)
     tid = blockIdx().x
     if (tid &lt;= min(length(a), length(b), length(c)))
         c[tid] = a[tid] + b[tid]
@@ -124,29 +124,29 @@ end
 
 function main()
 
-    #Make three CuArrays
+    # Make three CuArrays
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Fill a and b with values
+    # Fill a and b with values
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Execute the kernel
+    # Execute the kernel
     @cuda blocks=10 add!(a,b,c)
 
-    #Copy a,b and c back from the device to the host
+    # Copy a,b and c back from the device to the host
     a = Array(a)
     b = Array(b)
     c = Array(c)
 
-    #Do a sanity check
+    # Do a sanity check
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
 end
 
-main()</code></pre><p>Congratulations, you have now written your first Julia scripts which parallelise over threads and blocks! We will move on to a more involved example in the next section.</p><footer><hr/><a class="previous" href="../Setup_Julia/"><span class="direction">Previous</span><span class="title">-</span></a><a class="next" href="../Vector_dot_product/"><span class="direction">Next</span><span class="title">-</span></a></footer></article></body></html>
+main()</code></pre><p>Congratulations, you have now written your first Julia scripts which parallelise over threads and blocks! We will move on to a more involved example in the next section.</p><footer><hr/><a class="previous" href="../Setup_Julia/"><span class="direction">Previous</span><span class="title">Set-up Julia</span></a><a class="next" href="../Vector_dot_product/"><span class="direction">Next</span><span class="title">Health Warning: Types</span></a></footer></article></body></html>

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>- · Julia_GPU_examples.</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Julia_GPU_examples.</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><span class="toctext">Getting Started</span><ul><li><a class="toctext" href="../GPU_background/">-</a></li><li><a class="toctext" href="../Accessing_GPUs/">Accessing GPUs</a></li><li><a class="toctext" href="../Setup_Julia/">-</a></li></ul></li><li><span class="toctext">Developing With GPUs</span><ul><li><a class="toctext" href="../Vector_addition/">-</a></li><li><a class="toctext" href="../Vector_dot_product/">-</a></li><li class="current"><a class="toctext" href>-</a><ul class="internal"></ul></li></ul></li><li><span class="toctext">Performance</span><ul><li><a class="toctext" href="../Profiling/">-</a></li><li><a class="toctext" href="../Performance_thoughts/">-</a></li></ul></li><li><a class="toctext" href="../Summary/">Summary</a></li><li><a class="toctext" href="../Further_Reading/">Further Reading</a></li><li><a class="toctext" href="../About_the_author/">About the Author</a></li></ul></nav><article id="docs"><header><nav><ul><li>Developing With GPUs</li><li><a href>-</a></li></ul><a class="edit-page" href="github.com/jenni-westoby/Julia_GPU_examples.git"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>-</span><a class="fa fa-bars" href="#"></a></div></header><p>#Streaming</p><p>In CUDA, a stream is a sequence of operations executed in order on a device. We can use multiple streams to execute multiple sequences of operations sequentially. A common reason for using multiple streams in GPU programming is to &#39;hide&#39; the time taken for data transfer. Often copying data between the host and the device is one of the slowest steps in a GPU program. By writing your program with streams, you can split your data into chunks and have the GPU analysing a chunk in one stream whilst simultaneously copying a chunk of data to the GPU in another stream.</p><p>It should be noted that Julia&#39;s support for streaming in GPU programming is still rudimentary. As you will see, it is easy to stream kernel execution (analysis), but the ideal of streaming both data transfer and analysis is more challenging. Streaming both data transfer and analysis will require us to write much lower level code than is usually seen in Julia. Let&#39;s start with the simpler task of streaming our analysis.</p><p>##Streaming our Analysis</p><p>In this example, we will return to our favourite problem of vector addition. A script which will carry out vector addition in two streams is shown below:</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Streaming · Julia_GPU_examples.</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Julia_GPU_examples.</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><span class="toctext">Getting Started</span><ul><li><a class="toctext" href="../GPU_background/">Some Background on GPUs</a></li><li><a class="toctext" href="../Accessing_GPUs/">Accessing GPUs</a></li><li><a class="toctext" href="../Setup_Julia/">Set-up Julia</a></li></ul></li><li><span class="toctext">Developing With GPUs</span><ul><li><a class="toctext" href="../Vector_addition/">An Introduction to Parallelism</a></li><li><a class="toctext" href="../Vector_dot_product/">Health Warning: Types</a></li><li class="current"><a class="toctext" href>Streaming</a><ul class="internal"><li class="toplevel"><a class="toctext" href="#Streaming-our-Analysis-1">Streaming our Analysis</a></li><li class="toplevel"><a class="toctext" href="#Health-Warning:-Low-Level-Code-Alert-1">Health Warning: Low Level Code Alert</a></li><li class="toplevel"><a class="toctext" href="#Streaming-Data-Transfer-and-Analysis-1">Streaming Data Transfer and Analysis</a></li><li class="toplevel"><a class="toctext" href="#References-1">References</a></li></ul></li></ul></li><li><span class="toctext">Performance</span><ul><li><a class="toctext" href="../Profiling/">Profiling</a></li><li><a class="toctext" href="../Performance_thoughts/">Thoughts on Performance</a></li></ul></li><li><a class="toctext" href="../Summary/">Summary</a></li><li><a class="toctext" href="../Further_Reading/">Further Reading</a></li><li><a class="toctext" href="../About_the_author/">About the Author</a></li></ul></nav><article id="docs"><header><nav><ul><li>Developing With GPUs</li><li><a href>Streaming</a></li></ul><a class="edit-page" href="github.com/jenni-westoby/Julia_GPU_examples.git"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Streaming</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Streaming-1" href="#Streaming-1">Streaming</a></h1><p>In CUDA, a stream is a sequence of operations executed in order on a device. We can use multiple streams to execute multiple sequences of operations sequentially. A common reason for using multiple streams in GPU programming is to &#39;hide&#39; the time taken for data transfer. Often copying data between the host and the device is one of the slowest steps in a GPU program. By writing your program with streams, you can split your data into chunks and have the GPU analysing a chunk in one stream whilst simultaneously copying a chunk of data to the GPU in another stream.</p><p>It should be noted that Julia&#39;s support for streaming in GPU programming is still rudimentary. As you will see, it is easy to stream kernel execution (analysis), but the ideal of streaming both data transfer and analysis is more challenging. Streaming both data transfer and analysis will require us to write much lower level code than is usually seen in Julia. Let&#39;s start with the simpler task of streaming our analysis.</p><h1><a class="nav-anchor" id="Streaming-our-Analysis-1" href="#Streaming-our-Analysis-1">Streaming our Analysis</a></h1><p>In this example, we will return to our favourite problem of vector addition. A script which will carry out vector addition in two streams is shown below:</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv
 using Test
 
-#Kernel
+# Kernel
 function add!(a,b,c, index)
     c[index] = a[index] + b[index]
     return nothing
@@ -10,114 +10,114 @@ end
 
 function main()
 
-    #Initialise a, b and c
+    # Initialise a, b and c
     a = CuArrays.CuArray(fill(0, 10))
     b = CuArrays.CuArray(fill(0, 10))
     c = CuArrays.CuArray(fill(0, 10))
 
-    #Put values in a and b
+    # Put values in a and b
     for i in 1:10
         a[i] = -i
         b[i] = i * i
     end
 
-    #Create two streams
+    # Create two streams
     s1 = CuStream()
     s2 = CuStream()
 
-    #Call add! asynchronously in two streams
+    # Call add! asynchronously in two streams
     for i in 1:2:min(length(a), length(b), length(c))
         @cuda threads = 1 stream = s1 add!(a,b,c, i)
         @cuda threads = 1 stream = s2 add!(a,b,c, i+1)
     end
 
-    #Copy arrays back to host (CPU)
+    # Copy arrays back to host (CPU)
     a=Array(a)
     b=Array(b)
     c=Array(c)
 
-    #Check the addition worked
+    # Check the addition worked
     for i in 1:length(a)
         @test a[i] + b[i] ≈ c[i]
     end
 
 end
 
-main()</code></pre><p>So what have we changed to introduce streaming to the classic vector addition example? Firstly, the kernel is slightly different:</p><pre><code class="language-none">#Kernel
+main()</code></pre><p>So what have we changed to introduce streaming to the classic vector addition example? Firstly, the kernel is slightly different:</p><pre><code class="language-none"># Kernel
 function add!(a,b,c, index)
     c[index] = a[index] + b[index]
     return nothing
-end</code></pre><p>We now pass the index into the vectors as an argument, rather than relying on the thread or block index.</p><p>As previously, <code>main()</code> begins by creating <code>a</code>, <code>b</code> and <code>c</code> and putting values in <code>a</code> and <code>b</code>. The next change is halfway through <code>main()</code>, where we create two streams:</p><pre><code class="language-none">#Create two streams
+end</code></pre><p>We now pass the index into the vectors as an argument, rather than relying on the thread or block index.</p><p>As previously, <code>main()</code> begins by creating <code>a</code>, <code>b</code> and <code>c</code> and putting values in <code>a</code> and <code>b</code>. The next change is halfway through <code>main()</code>, where we create two streams:</p><pre><code class="language-none"># Create two streams
 s1 = CuStream()
-s2 = CuStream()</code></pre><p>This is fairly self explanatory - <code>CuStream()</code> is a function from CUDAnative which creates a stream. Next, we use the two streams to execute the kernel simultaneously in multiple streams:</p><pre><code class="language-none">#Call add! asynchronously in two streams
+s2 = CuStream()</code></pre><p>This is fairly self explanatory - <code>CuStream()</code> is a function from CUDAnative which creates a stream. Next, we use the two streams to execute the kernel simultaneously in multiple streams:</p><pre><code class="language-none"># Call add! asynchronously in two streams
 for i in 1:2:min(length(a), length(b), length(c))
     @cuda threads = 1 stream = s1 add!(a,b,c, i)
     @cuda threads = 1 stream = s2 add!(a,b,c, i + 1)
-end</code></pre><p>Let&#39;s walk through what this for loop is doing. This for loop iterates over the length of the vectors in steps of size 2. In each iteration, we execute the kernel once in the first stream (<code>s1</code>) using <code>i</code> as an index for vector addition, and once in the second stream (<code>s2</code>) using <code>i + 1</code> as the index for vector addition. Thus, in each interation of the for loop the values of <code>c[i]</code> and <code>c[i + 1]</code> are calculated in seperate streams. <code>main()</code> then finishes as before by copying <code>a</code>, <code>b</code> and <code>c</code> back to the host and checking that the results of the calculation are correct.</p><p>Hopefully you agree that executing the kernel across two streams was extremely easy in this example. However, it was also fairly pointless. We basically wrote some extra code to execute add! on two elements of c at a time, whereas our previous example without streaming calculated every element of c in parallel using threads.</p><p>Streaming can really come in to its own when used to stagger data transfer and analysis between streams. This is possible in Julia for GPU applications, but comes with a health warning...</p><p>##Health Warning: Low Level Code Alert</p><p>To stagger data transfer and analysis between streams, we will not be able to use CUDAnative or CUarrays. This is because <code>CuArrays.CuArray()</code>, the function we have used to copy data from host to device up to now, executes synchronously. This means that the function does not return until the data transfer is complete. If we try to stream data transfer with a synchronous data transfer function, we will not acheive any speed up because no other streams can receive and start executing any further instructions until the current stream&#39;s data transfer is complete and the function has returned.</p><p>To acheive speed-up by streaming data transfer, the process of data transfer must be asynchronous. If our data transfer function is asynchronous, it can return before finishing data transfer and we can submit other instructions to other streams whilst data transfer is still ongoing in the first stream. This can be a powerful way to speed up programs. It can also be useful if our data is too large to load on to the GPU all at once, as now we can upload and analyse our data in chunks whilst minimising the time the GPU spends sitting idle waiting for data to finish copying.</p><p>Unlike CuArrays and CUDAnative, CUDAdrv provides support for asynchronous data transfer. The code in the next example is very analogous to CUDA C or C++ code and the example below does in fact include a (very short) CUDA C script. In practice, this means we will have to think about memory management more than previously and our code will be less pretty. If you have never written code in a lower level language like C, you may struggle to follow the next section. If you are struggling, do not panic and just move on to the next section. In practice, you can often speed up your code a lot by porting to GPU without using streams.</p><p>##Streaming Data Transfer and Analysis</p><p>Let&#39;s rewrite our vector addition example so that it uses streaming for both data transfer and analysis.</p><pre><code class="language-none">using CUDAdrv, Test
+end</code></pre><p>Let&#39;s walk through what this for loop is doing. This for loop iterates over the length of the vectors in steps of size 2. In each iteration, we execute the kernel once in the first stream (<code>s1</code>) using <code>i</code> as an index for vector addition, and once in the second stream (<code>s2</code>) using <code>i + 1</code> as the index for vector addition. Thus, in each interation of the for loop the values of <code>c[i]</code> and <code>c[i + 1]</code> are calculated in seperate streams. <code>main()</code> then finishes as before by copying <code>a</code>, <code>b</code> and <code>c</code> back to the host and checking that the results of the calculation are correct.</p><p>Hopefully you agree that executing the kernel across two streams was extremely easy in this example. However, it was also fairly pointless. We basically wrote some extra code to execute add! on two elements of c at a time, whereas our previous example without streaming calculated every element of c in parallel using threads.</p><p>Streaming can really come in to its own when used to stagger data transfer and analysis between streams. This is possible in Julia for GPU applications, but comes with a health warning...</p><h1><a class="nav-anchor" id="Health-Warning:-Low-Level-Code-Alert-1" href="#Health-Warning:-Low-Level-Code-Alert-1">Health Warning: Low Level Code Alert</a></h1><p>To stagger data transfer and analysis between streams, we will not be able to use CUDAnative or CUarrays. This is because <code>CuArrays.CuArray()</code>, the function we have used to copy data from host to device up to now, executes synchronously. This means that the function does not return until the data transfer is complete. If we try to stream data transfer with a synchronous data transfer function, we will not acheive any speed up because no other streams can receive and start executing any further instructions until the current stream&#39;s data transfer is complete and the function has returned.</p><p>To acheive speed-up by streaming data transfer, the process of data transfer must be asynchronous. If our data transfer function is asynchronous, it can return before finishing data transfer and we can submit other instructions to other streams whilst data transfer is still ongoing in the first stream. This can be a powerful way to speed up programs. It can also be useful if our data is too large to load on to the GPU all at once, as now we can upload and analyse our data in chunks whilst minimising the time the GPU spends sitting idle waiting for data to finish copying.</p><p>Unlike CuArrays and CUDAnative, CUDAdrv provides support for asynchronous data transfer. The code in the next example is very analogous to CUDA C or C++ code and the example below does in fact include a (very short) CUDA C script. In practice, this means we will have to think about memory management more than previously and our code will be less pretty. If you have never written code in a lower level language like C, you may struggle to follow the next section. If you are struggling, do not panic and just move on to the next section. In practice, you can often speed up your code a lot by porting to GPU without using streams.</p><h1><a class="nav-anchor" id="Streaming-Data-Transfer-and-Analysis-1" href="#Streaming-Data-Transfer-and-Analysis-1">Streaming Data Transfer and Analysis</a></h1><p>Let&#39;s rewrite our vector addition example so that it uses streaming for both data transfer and analysis.</p><pre><code class="language-none">using CUDAdrv, Test
 
-#&#39;Turn on&#39; device
+# &#39;Turn on&#39; device
 dev = CuDevice(0)
 ctx = CuContext(dev)
 
-#Read in C code
+# Read in C code
 md = CuModuleFile(joinpath(@__DIR__, &quot;vadd.ptx&quot;))
 vadd = CuFunction(md, &quot;kernel_vadd&quot;)
 
-#Make data
+# Make data
 dims = 100
 a = round.(rand(Float32, dims) * 100)
 b = round.(rand(Float32, dims) * 100)
 c = similar(a)
 
-#Allocate memory for a and b on device stream 1
+# Allocate memory for a and b on device stream 1
 buf_a1 = Mem.alloc(sizeof(Float32))
 buf_b1 = Mem.alloc(sizeof(Float32))
 
-#Allocate memory for a and b on device stream 2
+# Allocate memory for a and b on device stream 2
 buf_a2 = Mem.alloc(sizeof(Float32))
 buf_b2 = Mem.alloc(sizeof(Float32))
 
-#Allocate memory for c on device
+# Allocate memory for c on device
 d_c1 = Mem.alloc(sizeof(Float32))
 d_c2 = Mem.alloc(sizeof(Float32))
 
-#Make streams
+# Make streams
 s1 = CuStream()
 s2 = CuStream()
 
-#Iterate over arrays in increments of 2
+# Iterate over arrays in increments of 2
 for i in 1:2:dims
 
-    #Asynchronously copy a[i] and a[i+1] onto device
+    # Asynchronously copy a[i] and a[i+1] onto device
     Mem.upload!(buf_a1, Ref(a, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_a2, Ref(a, i+1), sizeof(Float32), s2, async = true)
 
-    #Asynchronously copy b[i] and b[i+1] onto device
+    # Asynchronously copy b[i] and b[i+1] onto device
     Mem.upload!(buf_b1, Ref(b, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_b2, Ref(b, i+1), sizeof(Float32), s2, async = true)
 
-    #Call vadd to run on gpu
+    # Call vadd to run on gpu
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a1, buf_b1, d_c1,
     threads = 1, stream = s1)
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a2, buf_b2, d_c2,
     threads = 1, stream = s2)
 
-    #Asynchronously copy c[i] and c[i+1] back to host
+    # Asynchronously copy c[i] and c[i+1] back to host
     Mem.download!(Ref(c, i), d_c1, sizeof(Float32), s1, async = true)
     Mem.download!(Ref(c, i+1), d_c2, sizeof(Float32), s2, async = true)
 
 
 end
 
-#Check it worked
+# Check it worked
 @test a+b ≈ c
 
-#Destroy context
+# Destroy context
 destroy!(ctx)</code></pre><p>This is probably looking pretty alien at this point - don&#39;t worry, we will work through it slowly. Starting from the beginning:</p><pre><code class="language-none">using CUDAdrv, Test
 
-#&#39;Turn on&#39; device
+# &#39;Turn on&#39; device
 dev = CuDevice(0)
-ctx = CuContext(dev)</code></pre><p>The script starts as usual by loading some Julia packages. Then there are two lines we haven&#39;t seen before calling <code>CuDevice</code> and <code>CuContext</code>. These two lines essentially work together to create a context on the GPU. A GPU context can be thought of as analogous to a CPU process, so by running these two lines we are creating an address space and allocated resources on the GPU where our kernel can run and we can copy data. Once we have finished working on the GPU, we will need to <code>destroy</code> our context so the system can clean up the resources allocated there. Both creating the context and destroying it are taken care of behind the scenes by CUDAnative, which is why we have been able to ignore these functions until now.</p><p>The lines of code that follow context creation will either delight or alarm you, depending on your relationship with C:</p><pre><code class="language-none">#Read in C code
+ctx = CuContext(dev)</code></pre><p>The script starts as usual by loading some Julia packages. Then there are two lines we haven&#39;t seen before calling <code>CuDevice</code> and <code>CuContext</code>. These two lines essentially work together to create a context on the GPU. A GPU context can be thought of as analogous to a CPU process, so by running these two lines we are creating an address space and allocated resources on the GPU where our kernel can run and we can copy data. Once we have finished working on the GPU, we will need to <code>destroy</code> our context so the system can clean up the resources allocated there. Both creating the context and destroying it are taken care of behind the scenes by CUDAnative, which is why we have been able to ignore these functions until now.</p><p>The lines of code that follow context creation will either delight or alarm you, depending on your relationship with C:</p><pre><code class="language-none"># Read in C code
 md = CuModuleFile(joinpath(@__DIR__, &quot;vadd.ptx&quot;))
 vadd = CuFunction(md, &quot;kernel_vadd&quot;)</code></pre><p>So what is going on here? Well, first <code>CuModuleFile</code> reads in a file called vadd.ptx. In the next line, we use <code>CuFunction</code> to make a handle to a function called <code>kernel_vadd</code> defined in vadd.ptx, then assign that function handle to <code>vadd</code>. The outcome of these two lines is that a function called <code>kernel_vadd</code> defined in vadd.ptx becomes callable in Julia, and can be called using <code>vadd()</code>.</p><p>So what do the contents of vadd.ptx look like?</p><pre><code class="language-none">//
 // Generated by NVIDIA NVVM Compiler
@@ -171,44 +171,44 @@ __global__ void kernel_vadd(const float *a, const float *b, float *c)
     c[i] = a[i] + b[i];
 }
 
-}</code></pre><p>Even if you don&#39;t know C, hopefully you will be able to see that this function calculates a unique thread index (<code>i</code>) based on the block the thread is in and the thread&#39;s index within that block, then adds the values of <code>a</code> and <code>b</code> at that index and stores them in <code>c</code>. This is very similar to many of the kernels we have written before. We can make PTX code from CUDA C by executing the following command in a terminal</p><pre><code class="language-none">nvcc --ptx /path/to/cuda_C_file.cu</code></pre><p>It is also possible to make PTX code from Julia code using functions in CUDAnative such as <code>code_ptx()</code> - see http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html#CUDAnative.code_ptx for details.</p><p>Ok, so the outcome of all of the above is that we can now have a calleable GPU compatible function called <code>vadd</code> which performs vector addition. Next, we create our data:</p><pre><code class="language-none">#Make data
+}</code></pre><p>Even if you don&#39;t know C, hopefully you will be able to see that this function calculates a unique thread index (<code>i</code>) based on the block the thread is in and the thread&#39;s index within that block, then adds the values of <code>a</code> and <code>b</code> at that index and stores them in <code>c</code>. This is very similar to many of the kernels we have written before. We can make PTX code from CUDA C by executing the following command in a terminal</p><pre><code class="language-none">nvcc --ptx /path/to/cuda_C_file.cu</code></pre><p>It is also possible to make PTX code from Julia code using functions in CUDAnative such as <code>code_ptx()</code> - see http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html# CUDAnative.code_ptx for details.</p><p>Ok, so the outcome of all of the above is that we can now have a calleable GPU compatible function called <code>vadd</code> which performs vector addition. Next, we create our data:</p><pre><code class="language-none"># Make data
 dims = 100
 a = round.(rand(Float32, dims) * 100)
 b = round.(rand(Float32, dims) * 100)
-c = similar(a)</code></pre><p>This is done on a CPU and there is nothing really to note except that we are not using CuArrays. Next, we need to allocate memory on the GPU for <code>a</code>, <code>b</code> and <code>c</code>:</p><pre><code class="language-none">#Allocate memory for a and b on device stream 1
+c = similar(a)</code></pre><p>This is done on a CPU and there is nothing really to note except that we are not using CuArrays. Next, we need to allocate memory on the GPU for <code>a</code>, <code>b</code> and <code>c</code>:</p><pre><code class="language-none"># Allocate memory for a and b on device stream 1
 buf_a1 = Mem.alloc(sizeof(Float32))
-buf_b1 = Mem.alloc(sizeof(Float32))</code></pre><p>Again, this is the first time we have had to do this because previously it was taken care of for us by CUDAnative. In our streaming strategy, we are going to copy one element of <code>a</code> and <code>b</code> to each stream, calculate the value of the corresponding value of <code>c</code>, store that result in <code>c</code>, then copy the value of <code>c</code> back to the host. This means we need to allocate space for one element of <code>a</code>, <code>b</code> and <code>c</code> for each stream. There are two streams, so in practice this means we need to allocate space twice. In the code above, we are allocating space for one element of <code>a</code> and one element of <code>b</code> for the first stream. Each element in <code>a</code> and <code>b</code> is a <code>Float32</code>, so we use <code>sizeof()</code> to work out how many bytes we need to allocate. We also need to allocate space for <code>a</code> and <code>b</code> in stream 2, so we write:</p><pre><code class="language-none">#Allocate memory for a and b on device stream 2
+buf_b1 = Mem.alloc(sizeof(Float32))</code></pre><p>Again, this is the first time we have had to do this because previously it was taken care of for us by CUDAnative. In our streaming strategy, we are going to copy one element of <code>a</code> and <code>b</code> to each stream, calculate the value of the corresponding value of <code>c</code>, store that result in <code>c</code>, then copy the value of <code>c</code> back to the host. This means we need to allocate space for one element of <code>a</code>, <code>b</code> and <code>c</code> for each stream. There are two streams, so in practice this means we need to allocate space twice. In the code above, we are allocating space for one element of <code>a</code> and one element of <code>b</code> for the first stream. Each element in <code>a</code> and <code>b</code> is a <code>Float32</code>, so we use <code>sizeof()</code> to work out how many bytes we need to allocate. We also need to allocate space for <code>a</code> and <code>b</code> in stream 2, so we write:</p><pre><code class="language-none"># Allocate memory for a and b on device stream 2
 buf_a2 = Mem.alloc(sizeof(Float32))
-buf_b2 = Mem.alloc(sizeof(Float32))</code></pre><p>Next, we allocate space for <code>c</code> on both streams and create the streams:</p><pre><code class="language-none">#Allocate memory for c on device
+buf_b2 = Mem.alloc(sizeof(Float32))</code></pre><p>Next, we allocate space for <code>c</code> on both streams and create the streams:</p><pre><code class="language-none"># Allocate memory for c on device
 d_c1 = Mem.alloc(sizeof(Float32))
 d_c2 = Mem.alloc(sizeof(Float32))
 
-#Make streams
+# Make streams
 s1 = CuStream()
-s2 = CuStream()</code></pre><p>Now we are ready to actually start streaming data transfer and analysis. Like in the &#39;analysis only&#39; streaming example, we do this here by iterating over our arrays in increments of size 2.</p><pre><code class="language-none">#Iterate over arrays in increments of 2
+s2 = CuStream()</code></pre><p>Now we are ready to actually start streaming data transfer and analysis. Like in the &#39;analysis only&#39; streaming example, we do this here by iterating over our arrays in increments of size 2.</p><pre><code class="language-none"># Iterate over arrays in increments of 2
 for i in 1:2:dims
 
-    #Asynchronously copy a[i] and a[i+1] onto device
+    # Asynchronously copy a[i] and a[i+1] onto device
     Mem.upload!(buf_a1, Ref(a, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_a2, Ref(a, i+1), sizeof(Float32), s2, async = true)
 
-    #Asynchronously copy b[i] and b[i+1] onto device
+    # Asynchronously copy b[i] and b[i+1] onto device
     Mem.upload!(buf_b1, Ref(b, i), sizeof(Float32), s1, async = true)
     Mem.upload!(buf_b2, Ref(b, i+1), sizeof(Float32), s2, async = true)
 
-    #Call vadd to run on gpu
+    # Call vadd to run on gpu
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a1, buf_b1, d_c1,
     threads = 1, stream = s1)
     cudacall(vadd, (Ptr{Cfloat},Ptr{Cfloat},Ptr{Cfloat}), buf_a2, buf_b2, d_c2,
     threads = 1, stream = s2)
 
-    #Asynchronously copy c[i] and c[i+1] back to host
+    # Asynchronously copy c[i] and c[i+1] back to host
     Mem.download!(Ref(c, i), d_c1, sizeof(Float32), s1, async = true)
     Mem.download!(Ref(c, i+1), d_c2, sizeof(Float32), s2, async = true)
 
 
-end</code></pre><p>As before, we operate on the <code>i</code>th element in one stream and the <code>i + 1</code>th element in the other stream. In each stream, the order of operations is to copy (<code>Mem.upload!</code>) the value of the <code>i</code>th or <code>i + 1</code>th element of <code>a</code> and <code>b</code> from the host to the pre-allocated space on the device. Then we run the kernel (using <code>cudacall</code>) and copy the result back to the host (<code>Mem.download!</code>).</p><p>There are several things worth noting here. First, we must explicitly specify <code>async = true</code> to <code>Mem.upload!</code> and <code>Mem.download!</code> if we want them to execute asynchronously - as a default these functions are synchronous. Second, note that we call the kernel using <code>cudacall</code> rather than <code>@cuda</code> - this is because <code>@cuda</code> is part of CUDAnative which does not support asynchronous copies. Thirdly, note that we must specify which stream we are using for each of these functions - otherwise all of these functions will execute on the same stream as a default.</p><p>Finally, we finish our script by checking the results of our calculation and destroying the device context:</p><pre><code class="language-none">#Check it worked
+end</code></pre><p>As before, we operate on the <code>i</code>th element in one stream and the <code>i + 1</code>th element in the other stream. In each stream, the order of operations is to copy (<code>Mem.upload!</code>) the value of the <code>i</code>th or <code>i + 1</code>th element of <code>a</code> and <code>b</code> from the host to the pre-allocated space on the device. Then we run the kernel (using <code>cudacall</code>) and copy the result back to the host (<code>Mem.download!</code>).</p><p>There are several things worth noting here. First, we must explicitly specify <code>async = true</code> to <code>Mem.upload!</code> and <code>Mem.download!</code> if we want them to execute asynchronously - as a default these functions are synchronous. Second, note that we call the kernel using <code>cudacall</code> rather than <code>@cuda</code> - this is because <code>@cuda</code> is part of CUDAnative which does not support asynchronous copies. Thirdly, note that we must specify which stream we are using for each of these functions - otherwise all of these functions will execute on the same stream as a default.</p><p>Finally, we finish our script by checking the results of our calculation and destroying the device context:</p><pre><code class="language-none"># Check it worked
 @test a+b ≈ c
 
-#Destroy context
-destroy!(ctx)</code></pre><p>This example demonstrates that it is possible to stream data transfer and analysis in Julia. However, it should be noted that the code we wrote was so low level that almost every line we wrote was directly analogous to a CUDA C command. I would argue that the benefit of writing a program such as this in Julia versus C is debateable. There might be situations where it makes sense to write this type of program in Julia (for example, if you already had a huge Julia code base, a small part of which you wanted to port to GPU), but often it might actually be easier to use C.</p><p>In the next section, we will consider some Julia specific aspects of writing GPU compatible software.</p><p>#References</p><p>The data streaming and analysis example above was based on code taken from here: https://github.com/JuliaGPU/CUDAdrv.jl/tree/master/examples</p><footer><hr/><a class="previous" href="../Vector_dot_product/"><span class="direction">Previous</span><span class="title">-</span></a><a class="next" href="../Profiling/"><span class="direction">Next</span><span class="title">-</span></a></footer></article></body></html>
+# Destroy context
+destroy!(ctx)</code></pre><p>This example demonstrates that it is possible to stream data transfer and analysis in Julia. However, it should be noted that the code we wrote was so low level that almost every line we wrote was directly analogous to a CUDA C command. I would argue that the benefit of writing a program such as this in Julia versus C is debateable. There might be situations where it makes sense to write this type of program in Julia (for example, if you already had a huge Julia code base, a small part of which you wanted to port to GPU), but often it might actually be easier to use C.</p><p>In the next section, we will consider some Julia specific aspects of writing GPU compatible software.</p><h1><a class="nav-anchor" id="References-1" href="#References-1">References</a></h1><p>The data streaming and analysis example above was based on code taken from here: https://github.com/JuliaGPU/CUDAdrv.jl/tree/master/examples</p><footer><hr/><a class="previous" href="../Vector_dot_product/"><span class="direction">Previous</span><span class="title">Health Warning: Types</span></a><a class="next" href="../Profiling/"><span class="direction">Next</span><span class="title">Profiling</span></a></footer></article></body></html>
