@@ -1,2 +1,6 @@
 [deps]
 Julia_examples = "533bb67a-6665-5e13-8308-3d3b915f8b23"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+
+[compat]
+Documenter = "~0.20"
