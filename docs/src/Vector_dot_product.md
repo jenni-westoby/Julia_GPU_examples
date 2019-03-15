@@ -8,7 +8,7 @@ Following our example of vector addition in the previous section, you may be lef
 
 You may recall from "Some Background on GPUs" that GPUs are composed of grids of blocks, where each block contains threads.
 
-Put a pretty picture here.
+![](images/grid_threads_blocks.png)
 
 In addition to threads, each block contains 'shared memory'. Shared memory is memory which can be read and written to by all the threads in a given block. Shared memory can't be accessed by threads not in the specified block. This is illustrated in the diagram below.
 
@@ -104,7 +104,7 @@ This is the first time we've mixed up thread and block indexes in the same kerne
 
 The aim of this line of code is to generate a unique thread index for each thread. ```threadIdx().x``` gives the index for the current thread inside the current block. So ```threadIdx().x``` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so ```threadIdx().x = 1```), a second thread with the index 2 (```threadIdx().x = 2```) and so on, so we need a different approach to generate a unique thread index. ```blockDim().x``` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index (```blockIdx().x```) and the number of threads in a block (```blockDim().x```), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (```threadIdx().x```) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.
 
-Pretty picture
+![](images/GPU_tid.png)
 
 A final thing to note is that we subtract one from ```threadIdx().x``` and ```blockIdx().x```. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do you best to ignore them.
 

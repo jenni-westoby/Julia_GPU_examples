@@ -8,7 +8,7 @@ You have probably heard of a type of computer chip called a CPU. GPUs are a diff
 
 # How are GPUs organised?
 
-Oh dear.
+![](images/grid_threads_blocks.png)
 
 # Host and Device
 
