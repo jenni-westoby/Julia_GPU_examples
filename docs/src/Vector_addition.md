@@ -16,7 +16,7 @@ function add!(a,b,c)
 end
 ```
 
-The function add! takes three vectors (a, b and c), adds each element of a and b together and stores the result in c. Note that we do not explicitly return c, because the exclamation mark at the end of add! indicates that add! is a function that modifies it's arguments.
+The function ```add!()``` takes three vectors (```a```, ```b```  and ```c```), adds each element of ```a``` and ```b``` together and stores the result in ```c```. Note that we do not explicitly return ```c```, because the exclamation mark at the end of ```add!()``` indicates that ```add!()``` is a function that modifies it's arguments.
 
 We could call add! in a Julia script like this:
 
@@ -46,7 +46,7 @@ end
 main()
 ```
 
-main() is a very simple function that makes three vectors, a, b and c. It populates a and b with values, calls add! to add each value in a and b together, then runs a for loop to check that the values stored in c make sense.
+```main()``` is a very simple function that makes three vectors, ```a```, ```b``` and ```c```. It populates ```a``` and ```b``` with values, calls ```add!()``` to add each value in ```a``` and ```b``` together, then runs a for loop to check that the values stored in ```c``` make sense.
 
 # Adding Vectors on a GPU
 

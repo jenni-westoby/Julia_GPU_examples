@@ -7,7 +7,7 @@ This section assumes that you have already carried out the instructions in 'Acce
 
 If this is not the case, many of the below steps will not work because they depend on the two conditions above being true.
 
-Assuming you did follow the instructions in "Accessing GPUs" and you have access to a computer with a GPU and a working CUDA toolkit installation, carry out the steps below to get a Julia environment that you can run this tutorial in. Alternatively, you can use this docker image (when I get around to making it...)
+Assuming you did follow the instructions in "Accessing GPUs" and you have access to a computer with a GPU and a working CUDA toolkit installation, carry out the steps below to get a Julia environment that you can run this tutorial in.
 
 **Step 1:** Follow the link instructions to install Julia 1.0.3 if you haven't already done so: https://julialang.org/downloads/. I recommend against using your OS's package manager to install Julia, you are unlikely to get the correct version.
 
