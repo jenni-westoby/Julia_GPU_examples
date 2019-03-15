@@ -5,8 +5,8 @@ end
 
 makedocs(modules=[MyModule],
 build = "build",
-repo = "github.com/jenni-westoby/Julia_GPU_examples.jl.git",
-sitename = "Julia_GPU_examples.jl",
+repo = "github.com/jenni-westoby/Julia_GPU_examples.git",
+sitename = "Julia_GPU_examples.",
 pages = Any[
 "Home" => "index.md",
 "Getting Started" => Any["GPU_background.md","Accessing_GPUs.md",
@@ -18,4 +18,4 @@ pages = Any[
 "Further Reading" => "Further_Reading.md",
 "About the Author" => "About_the_author.md"])
 
-deploydocs(repo = "github.com/jenni-westoby/Julia_GPU_examples.jl.git")
+deploydocs(repo = "github.com/jenni-westoby/Julia_GPU_examples.git")
