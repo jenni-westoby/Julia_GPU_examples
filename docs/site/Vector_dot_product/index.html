@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Jenni Westoby">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Shared memory and Synchronisation - Develop GPU Software With Julia</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../assets/Documenter.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Shared memory and Synchronisation";
+    var mkdocs_page_input_path = "Vector_dot_product.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Develop GPU Software With Julia</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Introduction</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting Started</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../GPU_background/">Some background on GPUs</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Accessing_GPUs/">Set up your GPU</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Setup_Julia/">Set up Julia</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Developing with GPUs</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../Vector_addition/">An Introduction to Parallelism</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Shared memory and Synchronisation</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#health-warning-types">Health Warning: Types</a></li>
+    
+
+    <li class="toctree-l3"><a href="#shared-memory-and-synchronisation">Shared Memory and Synchronisation</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#vector-dot-product">Vector Dot Product</a></li>
+        
+            <li><a class="toctree-l4" href="#a-note-on-static-and-dynamic-allocation">A Note on Static and Dynamic Allocation</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Streaming/">Streaming</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Performance</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../Profiling/">Profiling</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Performance_thoughts/">Thoughts on Performance</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../Summary/">Summary</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../Further_Reading/">Further Reading</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../About_the_author/">About the Author</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Develop GPU Software With Julia</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Developing with GPUs &raquo;</li>
+        
+      
+    
+    <li>Shared memory and Synchronisation</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/edit/master/docs/Vector_dot_product.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="health-warning-types">Health Warning: Types</h1>
+<p>The vector addition example in the previous section was written in fairly high level code. We didn't have to think about memory allocation or even types. As we move on to more involved examples in this section and beyond, this is increasingly going to change. Julia has an optional types system, which in normal Julia usage often means that in practice you can ignore that types exist. It is often not possible to ignore types in Julia GPU programming. If you are a bit hazy about what types are, I recommend doing a bit of background reading from the Julia manual before proceeding. I will assume you know what types are here.</p>
+<h1 id="shared-memory-and-synchronisation">Shared Memory and Synchronisation</h1>
+<p>Following our example of vector addition in the previous section, you may be left wondering what the point of making a distinction between blocks and threads is. This section should make this clear.</p>
+<p>You may recall from "Some Background on GPUs" that GPUs are composed of grids of blocks, where each block contains threads.</p>
+<p>Put a pretty picture here.</p>
+<p>In addition to threads, each block contains 'shared memory'. Shared memory is memory which can be read and written to by all the threads in a given block. Shared memory can't be accessed by threads not in the specified block. This is illustrated in the diagram below.</p>
+<p><img alt="alt text" src="images/gpu_memory_layout.png" /></p>
+<p>In the code we wrote for vector addition, we did not use shared memory. Instead we used global memory. Global memory can be accessed from all threads, regardless of what block they live in, but has the disadvantage of taking a lot longer to read from compared with shared memory. There are two main reasons we might use shared memory in a program:</p>
+<ol>
+<li>It can be useful to have threads which can 'communicate' with each other via shared memory.</li>
+<li>If we have a kernel that frequently has to read from memory, it might be quicker to have it read from shared rather than global memory (but this very much depends on your particular algorithm).</li>
+</ol>
+<p>Of course, there is an obvious potential disadvantage to using shared memory. Giving multiple threads the capability to read and write from the same memory is potentially powerful. However it is also potentially dangerous. Now it is possible for threads to try to write to the same location in memory simultaneously. If we want there to be a dependency between threads, where thread A reads the results written by thread B, there is no automatic guarantee that thread A will not try to read the results before thread B has written them. We need a method to synchronise threads so this type of situation can be avoided. Fortunately, such a method exists as part of CUDAnative.</p>
+<h2 id="vector-dot-product">Vector Dot Product</h2>
+<p>We will use a vector dot product to explore some of the ideas introduced above. A vector dot product is when each of the elements of a vector is multiplied by the corresponding element in a second vector. Then, all of the multiplied elements are added together to give a single number as a result.</p>
+<p>As before, we begin our script by loading the Julia packages we need to write GPU compatible code.</p>
+<pre class="codehilite"><code>using CuArrays, CUDAnative, CUDAdrv</code></pre>
+
+
+<p>Next, we need to write the kernel. It is a lot to take in, but don't worry, we will go through it step by step.</p>
+<pre class="codehilite"><code>function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
+
+    #Set up shared memory cache for this current block.
+    cache = @cuDynamicSharedMem(Int64, threadsPerBlock)
+
+    #Initialise some variables.
+    tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
+    cacheIndex = threadIdx().x - 1
+    temp::Int64 = 0
+
+    #Iterate over vector to do dot product in parallel way
+    while tid &lt; N
+        temp += a[tid + 1] * b[tid + 1]
+        tid += blockDim().x * gridDim().x
+    end
+
+    #set cache values
+    cache[cacheIndex + 1] = temp
+
+    #synchronise threads
+    sync_threads()
+
+    #In the step below, we add up all of the values stored in the cache
+    i::Int = blockDim().x/2
+    while i!=0
+        if cacheIndex &lt; i
+            cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
+        end
+        sync_threads()
+        i/=2
+    end
+
+    #cache[1] now contains the sum of vector dot product calculations done in
+    #this block, so we write it to c
+    if cacheIndex == 0
+        c[blockIdx().x] = cache[1]
+    end
+
+    return nothing
+end</code></pre>
+
+
+<p>This is more complicated than the vector addition kernel, so let's work through it bit by bit. Let's start by focusing on the lines below:</p>
+<pre class="codehilite"><code>function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
+
+    #Set up shared memory cache for this current block.
+    cache = @cuDynamicSharedMem(Int64, threadsPerBlock)</code></pre>
+
+
+<p>Here, we are setting a variable called <code>cache</code> to the output of a function call to <code>@cuDynamicSharedMem</code>. As the comment suggests, this is required to create a cache of shared memory that can be accessed by all the threads in the current block. <code>@cuDynamicSharedMem</code> is a function from CUDAnative which allocates an array in dynamic shared memory on the GPU. The first argument specifies the type of elements in the array and the second argument specifies the dimensions of the array. So</p>
+<pre class="codehilite"><code>cache = @cuDynamicSharedMem(Int64, threadsPerBlock)</code></pre>
+
+
+<p>allocates an array in shared memory with the dimensions <code>threadsPerBlock</code>, where each element in the array is of type <code>Int64</code>.</p>
+<p>So now we have an array of size <code>threadsPerBlock</code> in shared memory which we can fill with <code>Int64</code>s. Next we set the value of the thread index (<code>tid</code>):</p>
+<pre class="codehilite"><code>#Initialise some variables.
+tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x</code></pre>
+
+
+<p>This is the first time we've mixed up thread and block indexes in the same kernel! So what's going on?</p>
+<p>The aim of this line of code is to generate a unique thread index for each thread. <code>threadIdx().x</code> gives the index for the current thread inside the current block. So <code>threadIdx().x</code> is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so <code>threadIdx().x = 1</code>), a second thread with the index 2 (<code>threadIdx().x = 2</code>) and so on, so we need a different approach to generate a unique thread index. <code>blockDim().x</code> gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index (<code>blockIdx().x</code>) and the number of threads in a block (<code>blockDim().x</code>), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (<code>threadIdx().x</code>) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.</p>
+<p>Pretty picture</p>
+<p>A final thing to note is that we subtract one from <code>threadIdx().x</code> and <code>blockIdx().x</code>. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do you best to ignore them.</p>
+<p>Fortunately the next two lines are conceptually a lot simpler:</p>
+<pre class="codehilite"><code>cacheIndex = threadIdx().x - 1
+temp::Int64 = 0</code></pre>
+
+
+<p><code>cacheIndex</code> is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for <code>tid</code>. We set it to <code>threadIdx().x - 1</code> so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads.</p>
+<p>Now we are ready to start calculating the dot product:</p>
+<pre class="codehilite"><code>#Iterate over vector to do dot product in parallel way
+while tid &lt; N
+    temp += a[tid + 1] * b[tid + 1]
+    tid += blockDim().x * gridDim().x
+end</code></pre>
+
+
+<p>For context, <code>N</code> is the number of elements in <code>a</code> (which is the same as the number of elements in <code>b</code>). So while <code>tid</code> less than the number of elements in <code>a</code>, we increment the value of temp by the product of <code>a[tid + 1]</code> and <code>b[tid + 1]</code> - this is the core operation in a vector dot product. Then, we increment <code>tid</code> by the number of threads in a block (<code>blockDim().x</code>) times the number of blocks in a grid (<code>gridDim().x</code>), which is the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.</p>
+<p>After exiting the while loop, we write the value calculated in temp to shared memory:</p>
+<pre class="codehilite"><code>#set cache values
+cache[cacheIndex + 1] = temp</code></pre>
+
+
+<p>In the next step of the kernel, we want to sum up all the values stored in shared memory. We do this by finding the sum of all the elements in <code>cache</code>. But remember that each thread is running asynchronously - just because one thread has finished executing the line:</p>
+<p><code>cache[cacheIndex + 1] = temp</code></p>
+<p>Doesn't mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:</p>
+<pre class="codehilite"><code>#synchronise threads
+sync_threads()</code></pre>
+
+
+<p>When each thread reaches this line, it pauses in its execution of the kernel until all of the threads in that block have reached the same place. Then, the threads restart again.</p>
+<p>Now all the threads have written to shared memory, we are ready to sum the elements of cache:</p>
+<pre class="codehilite"><code>#In the step below, we add up all of the values stored in the cache
+i::Int = blockDim().x/2
+while i!=0
+    if cacheIndex &lt; i
+        cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
+    end
+    sync_threads()
+    i/=2
+end</code></pre>
+
+
+<p>Here, we initialise <code>i</code> as half of the total number of threads in a block. In the first iteration of the while loop, if <code>cacheIndex</code> is less than this number, we add the value stored at <code>cache[cacheIndex + i + 1]</code> to the value of <code>cache[cacheIndex + 1]</code>. Then we synchronise the threads again, divide <code>i</code> by two and enter the second while loop iteration. If you work through this conceptually, you should see that provided the number of threads in a block is an even number, eventually the value at <code>cache[1]</code> will be equal to the sum of all the elements in <code>cache</code>.</p>
+<p>Now we need to write the value of <code>cache[1]</code> to <code>c</code> (remember that we can not directly return the value of <code>cache[1]</code> due to the requirement that the kernel must always return <code>nothing</code>).</p>
+<pre class="codehilite"><code>#cache[1] now contains the sum of vector dot product calculations done in
+#this block, so we write it to c
+if cacheIndex == 0
+    c[blockIdx().x] = cache[1]
+end
+
+return nothing
+end</code></pre>
+
+
+<p>And that's it! We have made it through the kernel. Now all we have to do is run the kernel on a GPU:</p>
+<pre class="codehilite"><code>function main()
+
+    #Initialise variables
+    N::Int64 = 33 * 1024
+    threadsPerBlock::Int64 = 256
+    blocksPerGrid::Int64 = min(32, (N + threadsPerBlock - 1) / threadsPerBlock)
+
+    #Create a,b and c
+    a = CuArrays.CuArray(fill(0, N))
+    b = CuArrays.CuArray(fill(0, N))
+    c = CuArrays.CuArray(fill(0, blocksPerGrid))
+
+    #Fill a and b
+    for i in 1:N
+        a[i] = i
+        b[i] = 2*i
+    end
+
+    #Execute the kernel. Note the shmem argument - this is necessary to allocate
+    #space for the cache we allocate on the gpu with @cuDynamicSharedMem
+    @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
+    (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
+
+    #Copy c back from the gpu (device) to the host
+    c = Array(c)
+
+    local result = 0
+
+    #Sum the values in c
+    for i in 1:blocksPerGrid
+        result += c[i]
+    end
+
+    #Check whether output is correct
+    println(&quot;Does GPU value &quot;, result, &quot; = &quot;, 2 * sum_squares(N - 1))
+end
+
+main()</code></pre>
+
+
+<p><code>main()</code> starts by initialising several variables, including <code>N</code> which sets the size of <code>a</code>, <code>b</code> and <code>c</code>. We also initialise the number of threads we want the GPU to use per block and the number of blocks we want to use on the GPU. Next, we use CuArrays to create <code>a</code>, <code>b</code> and <code>c</code> and to fill <code>a</code> and <code>b</code>. Then, we use <code>@cuda</code> to execute the kernel on the GPU:</p>
+<pre class="codehilite"><code>@cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
+(threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)</code></pre>
+
+
+<p>Note that in addition to setting the number of blocks and threads we want the GPU to use, we set a value for <code>shmem</code>. <code>shmem</code> describes the amount of dynamic shared memory we need to allocate for the kernel - see below for more details. Since we use <code>@cuDynamicSharedMem</code> to make an array of size <code>threadsPerBlock</code> full of <code>Int64</code>s in the kernel, we need to allocate <code>(threadsPerBlock * sizeof(Int64)</code> bytes of space in advance when we call <code>@cuda</code>.</p>
+<p>After executing the kernel on GPU, we copy <code>c</code> back to the host (CPU). At this point, <code>c</code> is an array whose length equals the number of blocks in the grid. Each element in <code>c</code> is equal to the sum of the values calculated by the threads in a block. We need to sum the values of <code>c</code> to find the final result of the vector dot product:</p>
+<pre class="codehilite"><code>#Sum the values in c
+for i in 1:blocksPerGrid
+    result += c[i]
+end</code></pre>
+
+
+<p>Finally, we do a sanity check to make sure the output is correct. For completeness, this is the function <code>sum_squares()</code>:</p>
+<pre class="codehilite"><code>function sum_squares(x)
+    return (x * (x + 1) * (2 * x + 1) / 6)
+end</code></pre>
+
+
+<p>And that is it! We now have a complete Julia script which calculates a vector dot product on a GPU, making use of shared memory and synchronisation. In the next section, we will discuss streaming.</p>
+<h2 id="a-note-on-static-and-dynamic-allocation">A Note on Static and Dynamic Allocation</h2>
+<p>In the first line of the kernel, we call <code>@cuDynamicSharedMem</code>. <code>@cuDynamicSharedMem</code> has a sister function, <code>@cuStaticSharedMem</code>. Like <code>@cuDynamicSharedMem</code>, <code>@cuStaticSharedMem</code> allocates arrays in shared memory. However unlike <code>@cuDynamicSharedMem</code>, <code>@cuStaticSharedMem</code> allocates arrays statically rather than dynamically. Memory that is statically allocated is allocated at compilation time, whereas memory that is dynamically allocated is allocated at program execution. We used <code>@cuDynamicSharedMem</code> in our example because one of the command line arguments for <code>@cuDynamicSharedMem</code> was a kernel command line argument (<code>threadsPerBlock</code>). Because the value of the kernel command line argument is not known at compilation time, dynamic rather than static memory allocation was required.</p>
+<p>A consequence of using dynamic rather than static memory allocation was that we had to specify how much memory <code>@cuDynamicSharedMem</code> would need in our <code>@cuda</code> call. Otherwise, there is no way <code>@cuda</code> could know the correct amount of shared memory to allocate in advance, since <code>@cuDynamicSharedMem</code> does not determine how much shared memory it will need until it runs.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Streaming/" class="btn btn-neutral float-right" title="Streaming">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Vector_addition/" class="btn btn-neutral" title="An Introduction to Parallelism"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../Vector_addition/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Streaming/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="../assets/mathjaxhelper.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

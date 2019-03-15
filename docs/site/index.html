@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="In this tutorial, I will guide you through the full workflow of writing a basic program in Julia that will run on GPU.">
+  <meta name="author" content="Jenni Westoby">
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>Introduction - Develop GPU Software With Julia</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="assets/Documenter.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Introduction";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> Develop GPU Software With Julia</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href=".">Introduction</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#learn-to-develop-gpu-software-using-julia">Learn to Develop GPU Software Using Julia</a></li>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting Started</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="GPU_background/">Some background on GPUs</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="Accessing_GPUs/">Set up your GPU</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="Setup_Julia/">Set up Julia</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Developing with GPUs</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="Vector_addition/">An Introduction to Parallelism</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="Vector_dot_product/">Shared memory and Synchronisation</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="Streaming/">Streaming</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Performance</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="Profiling/">Profiling</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="Performance_thoughts/">Thoughts on Performance</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="Summary/">Summary</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="Further_Reading/">Further Reading</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="About_the_author/">About the Author</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">Develop GPU Software With Julia</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Introduction</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/edit/master/docs/index.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="learn-to-develop-gpu-software-using-julia">Learn to Develop GPU Software Using Julia</h1>
+<p>A number of packages have been developed for Julia that enable developers to write Julia code that will run on GPUs. But until now, open source documentation which would enable a developer to go from zero CUDA knowledge to making effective use of these packages has not existed. This tutorial aims to change that. In this tutorial, I will guide you through the full workflow of writing a basic program in Julia that will run on GPU. Things you will learn from this tutorial include:</p>
+<ul>
+<li>What a GPU is and why writing code to run on GPUs might be useful.</li>
+<li>How to set up your computer and install the graphics drivers necessary to make use of your GPU.</li>
+<li>How to write Julia code that will run on a GPU in a parallel manner using threads, blocks, shared memory and streaming.</li>
+<li>How to benchmark Julia code that runs on GPUs.</li>
+</ul>
+<p>This tutorial assumes you already know how to write code in Julia. Julia is a high level, syntactically intuitive language, so if you don't know Julia but do know other programming languages you may find you are able to follow along anyway. If you would like to get started coding in Julia, I recommend reading some of the Julia Documentation: https://docs.julialang.org/en/v1.0/.</p>
+<p>This tutorial is intended to provide a foundation for developers to start writing Julia code that runs on GPUs. It is not intended to be a comprehensive guide to everything you could conceivably do on a GPU using Julia. Hopefully, you will find it instead gives a gentle introduction to some core concepts in GPU programming and how you can use them in Julia. I focus on the CUDAdrv, CUDAnative and CuArrays packages in this tutorial, although other Julia packages for using GPUs exist - see https://github.com/JuliaGPU for details.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="GPU_background/" class="btn btn-neutral float-right" title="Some background on GPUs">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+      
+        <span style="margin-left: 15px"><a href="GPU_background/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="assets/mathjaxhelper.js" defer></script>
+      <script src="search/main.js" defer></script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.0.4
+Build Date UTC : 2019-03-15 11:47:29
+-->

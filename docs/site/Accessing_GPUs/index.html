@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Jenni Westoby">
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Set up your GPU - Develop GPU Software With Julia</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="../assets/Documenter.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Set up your GPU";
+    var mkdocs_page_input_path = "Accessing_GPUs.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Develop GPU Software With Julia</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Introduction</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting Started</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../GPU_background/">Some background on GPUs</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Set up your GPU</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#accessing-gpus">Accessing GPUs</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#option-1">Option 1</a></li>
+        
+            <li><a class="toctree-l4" href="#option-2">Option 2</a></li>
+        
+            <li><a class="toctree-l4" href="#option-3">Option 3</a></li>
+        
+            <li><a class="toctree-l4" href="#surely-i-dont-really-need-to-install-a-new-operating-system">Surely I don't really need to install a new operating system</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Setup_Julia/">Set up Julia</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Developing with GPUs</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../Vector_addition/">An Introduction to Parallelism</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Vector_dot_product/">Shared memory and Synchronisation</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Streaming/">Streaming</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Performance</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../Profiling/">Profiling</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../Performance_thoughts/">Thoughts on Performance</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../Summary/">Summary</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../Further_Reading/">Further Reading</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../About_the_author/">About the Author</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Develop GPU Software With Julia</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Getting Started &raquo;</li>
+        
+      
+    
+    <li>Set up your GPU</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/edit/master/docs/Accessing_GPUs.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="accessing-gpus">Accessing GPUs</h1>
+<p>You basically have three options for accessing GPUs:</p>
+<ol>
+<li>Access GPUs on a commercial cloud based platform eg. AWS</li>
+<li>Access GPUs using a HPC you have access to through your company/academic institution.</li>
+<li>Use the GPU in your own computer</li>
+</ol>
+<h2 id="option-1">Option 1</h2>
+<p>If you are going for option 1, the cloud based platform you are using should have instructions for how to gain access to the GPUs you are paying for. It is quite likely that the cloud based platform will already have the CUDA toolkit installed, so once you have managed to log in you are probably good to go!</p>
+<h2 id="option-2">Option 2</h2>
+<p>If you are going for option 2, talk to the HPC administrator to find out how to get access to the GPUs and check that the CUDA toolkit are already installed.</p>
+<h2 id="option-3">Option 3</h2>
+<p>If you are going for option 3, things are about to get interesting.</p>
+<p>These are some instructions you can try following to get the GPU in your computer working in a way that Julia will be able to interact with it. I make no promises that they will work and will not offer support if they fail for you. These instructions assume you are working in a Linux environment. I don't know how to make your GPU work in a Windows or Mac environment.</p>
+<p><strong>Step 1:</strong> Check that your computer has a GPU.</p>
+<p><strong>Step 2:</strong> Check that your computer has a GPU that is actually supported by NVIDIA (CUDA is not supported on old GPUs).</p>
+<p><strong>Step 3:</strong> Replace your operating system with a fresh install of Ubuntu 18.04. No, I am not joking. Remember to back up your files before you install a new operating system just in case something goes wrong.</p>
+<p><strong>Step 4:</strong> Open a terminal and type in the following commands:</p>
+<pre class="codehilite"><code>sudo add-apt-repository ppa:graphics-drivers/ppa
+
+sudo apt update
+
+sudo ubuntu-drivers autoinstall</code></pre>
+
+
+<p><strong>Step 5:</strong> Reboot your computer</p>
+<p><strong>Step 6:</strong> Open a terminal and type in the following:</p>
+<pre class="codehilite"><code>sudo apt install nvidia-cuda-toolkit gcc-6
+
+nvcc --version</code></pre>
+
+
+<p>If your install has worked, the final command should print out some version information.</p>
+<p><strong>Step 7:</strong> Assuming all of the above worked, install the latest version of Julia and continue working through this tutorial.</p>
+<p><strong>Disclaimer</strong> The above are NOT authoritative instructions on how to install the CUDA toolkit, they are instructions that worked for me. You should visit the NVIDIA website for authoritative instructions.</p>
+<p><strong>Disclaimer</strong> I am writing these instructions in spring 2019. If you are reading this disclaimer and the year is 2021 or greater, these instructions may be woefully out of date and better ignored.</p>
+<h2 id="surely-i-dont-really-need-to-install-a-new-operating-system">Surely I don't really need to install a new operating system</h2>
+<p>The CUDA toolkit and drivers are notoriously difficult to install. It might sound a bit mad, but installing a fresh version of Ubuntu 18.04 is the most reliable method for installing CUDA that I have found. Note, steps 4-6 are taken from the second answer here: https://askubuntu.com/questions/1028830/how-do-i-install-cuda-on-ubuntu-18-04, so a big thank you to eromod and N0rbert.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Setup_Julia/" class="btn btn-neutral float-right" title="Set up Julia">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../GPU_background/" class="btn btn-neutral" title="Some background on GPUs"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/jenni-westoby/Julia_GPU_examples.git/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../GPU_background/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Setup_Julia/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="../assets/mathjaxhelper.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
