@@ -74,7 +74,7 @@ end
 
 ```
 
-Since add! is now ready to run on a GPU, we have thus transformed add! from an ordinary function to a kernel. Isn't unnecessary terminology wonderful?
+Since add! is now ready to run on a GPU, we have thus transformed add! from an ordinary function to a kernel. Isn't terminology wonderful?
 
 Aside from now referring to add! as a kernel rather than a function, the only thing that has changed between the CPU and GPU version of add! is the addition of this line:
 
