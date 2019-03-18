@@ -263,4 +263,4 @@ Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMe
 
 Again, all of the data transfer steps have vanished from the profiling output, since we have only profiled kernel execution. Notice that we see 5 lines of output here, corresponding to 5 calls of the kernel, and that the kernel is always called in the same stream, because we only profiled calls to the kernel in stream ```s1```.
 
-Hopefully this section has shown some of the methods you can use to profile GPU software that you write in Julia. In the next section, we will discuss things to be aware of when thinking about performance.
+This section has shown some of the methods you can use to profile GPU software that you write in Julia. In the next section, we will discuss warps and branching and their impact on performance.
