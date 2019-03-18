@@ -28,13 +28,13 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     sync_threads()
 
     # In the step below, we add up all of the values stored in the cache
-    i::Int = blockDim().x/2
-    while i!=0
+    i::Int = blockDim().x ÷ 2
+    while i>0
         if cacheIndex < i
             cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
         end
         sync_threads()
-        i/=2
+        i = i ÷ 2
     end
 
     # cache[1] now contains the sum of vector dot product calculations done in
@@ -77,6 +77,8 @@ function main()
     @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
     (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
+    CUDAdrv.@profile @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
+    (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     # Copy c back from the gpu (device) to the host
     c = Array(c)
 

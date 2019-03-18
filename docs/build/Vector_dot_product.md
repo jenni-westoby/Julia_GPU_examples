@@ -72,13 +72,13 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     sync_threads()
 
     # In the step below, we add up all of the values stored in the cache
-    i::Int = blockDim().x/2
+    i::Int = blockDim().x ÷ 2
     while i!=0
         if cacheIndex < i
             cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
         end
         sync_threads()
-        i/=2
+        i = i ÷ 2
     end
 
     # cache[1] now contains the sum of vector dot product calculations done in
@@ -126,7 +126,7 @@ tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
 This is the first time we've mixed up thread and block indexes in the same kernel! So what's going on?
 
 
-The aim of this line of code is to generate a unique thread index for each thread. `threadIdx().x` gives the index for the current thread inside the current block. So `threadIdx().x` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so `threadIdx().x = 1`), a second thread with the index 2 (`threadIdx().x = 2`) and so on, so we need a different approach to generate a unique thread index. `blockDim().x` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index (`blockIdx().x`) and the number of threads in a block (`blockDim().x`), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (`threadIdx().x`) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.
+The aim of this line of code is to generate a unique thread index for each thread. `threadIdx().x` gives the index for the current thread inside the current block. So `threadIdx().x` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so `threadIdx().x = 1`), a second thread with the index 2 (`threadIdx().x = 2`) and so on, so we need a different approach to generate a unique thread index. `blockDim().x` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index (`blockIdx().x`) and the number of threads in a block (`blockDim().x`), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (`threadIdx().x`) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below for an imaginary GPU with four blocks.
 
 
 ![](images/GPU_tid.png)
@@ -196,13 +196,13 @@ Now all the threads have written to shared memory, we are ready to sum the eleme
 
 ```
 # In the step below, we add up all of the values stored in the cache
-i::Int = blockDim().x/2
+i::Int = blockDim().x ÷ 2
 while i!=0
     if cacheIndex < i
         cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
     end
     sync_threads()
-    i/=2
+    i = i ÷ 2
 end
 ```
 
@@ -316,4 +316,3 @@ In the first line of the kernel, we call `@cuDynamicSharedMem`. `@cuDynamicShare
 
 
 A consequence of using dynamic rather than static memory allocation was that we had to specify how much memory `@cuDynamicSharedMem` would need in our `@cuda` call. Otherwise, there is no way `@cuda` could know the correct amount of shared memory to allocate in advance, since `@cuDynamicSharedMem` does not determine how much shared memory it will need until it runs.
-

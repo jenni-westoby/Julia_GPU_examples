@@ -16,7 +16,7 @@ function add!(a,b,c)
 end
 ```
 
-The function ```add!()``` takes three vectors (```a```, ```b```  and ```c```), adds each element of ```a``` and ```b``` together and stores the result in ```c```. Note that we do not explicitly return ```c```, because the exclamation mark at the end of ```add!()``` indicates that ```add!()``` is a function that modifies it's arguments.
+The function ```add!()``` takes three vectors (```a```, ```b```  and ```c```), adds each element of ```a``` and ```b``` together and stores the result in ```c```.
 
 We could call add! in a Julia script like this:
 

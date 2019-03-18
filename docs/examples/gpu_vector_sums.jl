@@ -1,4 +1,4 @@
-using CuArrays, CUDAnative, CUDAdrv
+using CuArrays, CUDAnative, CUDAdrv, Test
 
 function add!(a,b,c)
     tid = blockIdx().x
@@ -22,6 +22,7 @@ function main()
     # IMPORTANT NOTE TO SELF
     # you can pass tuples to represent a grid to blocks, just like in CUDA C <3
     @cuda blocks=10 add!(a,b,c)
+    CUDAdrv.@profile @cuda blocks=10 add!(a,b,c)
 
     a=Array(a)
     b=Array(b)

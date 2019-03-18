@@ -17,7 +17,8 @@ ERROR: LLVM IR generated for Kernel(CuDeviceArray{Int64,1,CUDAnative.AS.Global})
 Or
 
 ```
-The error about not returning nothing
+KernelError: kernel returns a value of type `Union{Nothing, Int64}`
+
 ```
 
 The first error message broadly means that you tried to do something which could not compile to GPU code. Common reasons this might happen include:
@@ -25,7 +26,7 @@ The first error message broadly means that you tried to do something which could
 - Your kernel contains unexpected dynamic behavior.
 - Your kernel contains type instabilities.
 
-The second error message indicates that your code compiled successfully (unless it is preceded by the first error message) but that something went wrong during runtime, hence it returned something other than ```nothing```.
+The second error message indicates that your code compiled successfully (unless it is preceded by the first error message, or another compilation error) but that something went wrong during runtime, hence it returned something other than ```nothing```.
 
 Unfortunately, you will never see the sort of error message you are probably accustomed to in Julia, where a description of why the code failed to compile or run and a line number are provided. A description of why this is and macros you can use to help debug are described here: http://juliagpu.github.io/CUDAnative.jl/latest/man/troubleshooting.html. In practice, I often debug by iteratively commenting out half of the remaining lines of code in my kernel to identify which line(s) are causing problems.
 

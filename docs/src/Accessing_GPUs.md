@@ -23,7 +23,7 @@ These are some instructions you can try following to get the GPU in your compute
 
 **Step 1:** Check that your computer has a GPU.
 
-**Step 2:** Check that your computer has a GPU that is actually supported by NVIDIA (CUDA is not supported on old GPUs).
+**Step 2:** Check that your computer has a GPU that is actually supported by CUDA (CUDA is only supported on GPUs made by NVIDIA, and is not supported on old NVIDIA GPUs).
 
 **Step 3:** Replace your operating system with a fresh install of Ubuntu 18.04. No, I am not joking. Remember to back up your files before you install a new operating system just in case something goes wrong.
 
