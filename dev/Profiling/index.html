@@ -1,2 +1,151 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Profiling · Julia_GPU_examples.</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Julia_GPU_examples.</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><span class="toctext">Getting Started</span><ul><li><a class="toctext" href="../GPU_background/">Some Background on GPUs</a></li><li><a class="toctext" href="../Accessing_GPUs/">Accessing GPUs</a></li><li><a class="toctext" href="../Setup_Julia/">Set-up Julia</a></li></ul></li><li><span class="toctext">Developing With GPUs</span><ul><li><a class="toctext" href="../Vector_addition/">An Introduction to Parallelism</a></li><li><a class="toctext" href="../Vector_dot_product/">Shared Memory and Synchronisation</a></li><li><a class="toctext" href="../Streaming/">Streaming</a></li><li><a class="toctext" href="../Challenges/">Challenges in Julia GPU Software Development</a></li></ul></li><li><span class="toctext">Performance</span><ul><li class="current"><a class="toctext" href>Profiling</a><ul class="internal"></ul></li><li><a class="toctext" href="../Performance_thoughts/">Thoughts on Performance</a></li></ul></li><li><a class="toctext" href="../Summary/">Summary</a></li><li><a class="toctext" href="../Further_Reading/">Further Reading</a></li><li><a class="toctext" href="../About_the_author/">About the Author</a></li></ul></nav><article id="docs"><header><nav><ul><li>Performance</li><li><a href>Profiling</a></li></ul><a class="edit-page" href="github.com/jenni-westoby/Julia_GPU_examples.git"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Profiling</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Profiling-1" href="#Profiling-1">Profiling</a></h1><footer><hr/><a class="previous" href="../Challenges/"><span class="direction">Previous</span><span class="title">Challenges in Julia GPU Software Development</span></a><a class="next" href="../Performance_thoughts/"><span class="direction">Next</span><span class="title">Thoughts on Performance</span></a></footer></article></body></html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Profiling · Julia_GPU_examples.</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Julia_GPU_examples.</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><span class="toctext">Getting Started</span><ul><li><a class="toctext" href="../GPU_background/">Some Background on GPUs</a></li><li><a class="toctext" href="../Accessing_GPUs/">Accessing GPUs</a></li><li><a class="toctext" href="../Setup_Julia/">Set-up Julia</a></li></ul></li><li><span class="toctext">Developing With GPUs</span><ul><li><a class="toctext" href="../Vector_addition/">An Introduction to Parallelism</a></li><li><a class="toctext" href="../Vector_dot_product/">Shared Memory and Synchronisation</a></li><li><a class="toctext" href="../Streaming/">Streaming</a></li><li><a class="toctext" href="../Challenges/">Challenges in Julia GPU Software Development</a></li></ul></li><li><span class="toctext">Performance</span><ul><li class="current"><a class="toctext" href>Profiling</a><ul class="internal"><li class="toplevel"><a class="toctext" href="#nvprof-1">nvprof</a></li><li class="toplevel"><a class="toctext" href="#Zoom-in-on-the-kernel-1">Zoom in on the kernel</a></li></ul></li><li><a class="toctext" href="../Performance_thoughts/">Thoughts on Performance</a></li></ul></li><li><a class="toctext" href="../Summary/">Summary</a></li><li><a class="toctext" href="../Further_Reading/">Further Reading</a></li><li><a class="toctext" href="../About_the_author/">About the Author</a></li></ul></nav><article id="docs"><header><nav><ul><li>Performance</li><li><a href>Profiling</a></li></ul><a class="edit-page" href="github.com/jenni-westoby/Julia_GPU_examples.git"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Profiling</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Profiling-1" href="#Profiling-1">Profiling</a></h1><p>There are a number of reasons we might want to profile our GPU code, including:</p><ul><li>To work out which bits of our program take the most time to run.</li><li>To check that our kernel is executing on as many threads and blocks as we expect.</li><li>To check that our kernel is executing on as many streams as expected.</li></ul><p>We can use a tool from the CUDA toolkit called <code>nvprof</code> for profiling. The following command can be used to call nvprof to profile a specific Julia GPU program from the command line:</p><pre><code class="language-none">$ nvprof --profile-from-start off /path/to/julia /path/to/julia/script</code></pre><p>Note that we use <code>--profile-from-start off</code> to tell <code>nvprof</code> not to start profiling until we tell it to. There are several reasons we might not want to have <code>nvprof</code> start profiling straight away. One reason is that Julia is a Just-In-Time (JIT) compiled language. We often don&#39;t want to include the time taken to compile our scripts in our profiling estimates. Another reason is that GPU software usually executes some commands on CPU as well as GPU, and we may only want to profile commands executed on GPU. Finally, we might only be interested in a particular bit of our script, such as the kernel or the time taken to copy data from host to device. We can turn <code>--profile-from-start</code> off to enable us to profile just the bit we are interested.</p><h1><a class="nav-anchor" id="nvprof-1" href="#nvprof-1">nvprof</a></h1><p>Let&#39;s use our vector addition kernel streaming example to investigate how we can use <code>nvprof</code> for profiling. We have modified the example so it can be profiled with <code>nvprof</code>:</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv
+using Test
+
+# Kernel
+function add!(a,b,c, index)
+    c[index] = a[index] + b[index]
+    return nothing
+end
+
+function main()
+
+    # Initialise a, b and c
+    a = CuArrays.CuArray(fill(0, 10))
+    b = CuArrays.CuArray(fill(0, 10))
+    c = CuArrays.CuArray(fill(0, 10))
+
+    # Put values in a and b
+    for i in 1:10
+        a[i] = -i
+        b[i] = i * i
+    end
+
+    # Create two streams
+    s1 = CuStream()
+    s2 = CuStream()
+
+    # Call add! asynchronously in two streams
+    for i in 1:2:min(length(a), length(b), length(c))
+        @cuda threads = 1 stream = s1 add!(a,b,c, i)
+        @cuda threads = 1 stream = s2 add!(a,b,c, i+1)
+    end
+
+    # Copy arrays back to host (CPU)
+    a=Array(a)
+    b=Array(b)
+    c=Array(c)
+
+    # Check the addition worked
+    for i in 1:length(a)
+        @test a[i] + b[i] ≈ c[i]
+    end
+
+end
+
+main()
+CUDAdrv.@profile main()</code></pre><p>The only change we have made to this example is to add this line at the end:</p><pre><code class="language-none">CUDAdrv.@profile main()</code></pre><p>This line executes <code>main()</code> whilst activating the CUDA profiler. This signals to <code>nvprof</code> the point at which to start profiling. Notice that we have already called <code>main()</code> once in the line before we call <code>CUDAdrv.@profile</code> - this is to force <code>main()</code> to compile before we start profiling. If we don&#39;t call the function we want to profile once before we start profiling then our profiling estimates will include time spent compiling.</p><p>Having modified our example script to invoke the <code>nvprof</code> profiler, we can now get profiling information by executing the following on the command line:</p><pre><code class="language-none">$ nvprof --profile-from-start off julia gpu_vector_sums_streams.jl</code></pre><p>Where <code>gpu_vector_sums_streams.jl</code> is the name of our example script. The output of this command should look something like this:</p><pre><code class="language-none">Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+GPU activities:   50.18%  21.632us        23     940ns     928ns  1.2160us  [CUDA memcpy HtoD]
+       39.64%  17.088us        10  1.7080us  1.5680us  2.1440us  ptxcall_add__1
+       10.17%  4.3850us         3  1.4610us  1.3440us  1.5680us  [CUDA memcpy DtoH]
+API calls:   82.95%  1.5925ms        10  159.25us  5.0680us  1.5383ms  cuLaunchKernel
+       10.24%  196.67us        23  8.5500us  6.6030us  26.618us  cuMemcpyHtoD
+        2.34%  44.868us         3  14.956us  8.3740us  26.289us  cuMemAlloc
+        2.25%  43.195us         3  14.398us  12.429us  17.862us  cuMemcpyDtoH
+        1.70%  32.641us         2  16.320us  8.3680us  24.273us  cuStreamCreate
+        0.39%  7.4110us        15     494ns     426ns     672ns  cuCtxGetCurrent
+        0.13%  2.4880us         1  2.4880us  2.4880us  2.4880us  cuDeviceGetCount</code></pre><p>There is some pretty interesting information in this output - for example, the first line of the output tells us that 50.18% of GPU time is spent copying data from host to device. This is a good illustration of how slow copying data between CPU and GPU often is. We can get some more interesting information by adding an extra flag to our <code>nvprof</code> command:</p><pre><code class="language-none">$ nvprof --profile-from-start off --print-gpu-trace julia gpu_vector_sums_streams.jl</code></pre><p>The output of this command should look something like this:</p><pre><code class="language-none">Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
+15.1992s  1.2480us                    -               -         -         -         -       80B  61.133MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1992s  1.1200us                    -               -         -         -         -       80B  68.120MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1992s     928ns                    -               -         -         -         -       80B  82.213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1992s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1992s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1992s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1992s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1992s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     960ns                    -               -         -         -         -        8B  7.9473MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1993s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1994s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1994s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.1994s     928ns                    -               -         -         -         -        8B  8.2213MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]
+15.2010s  2.2720us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        16  ptxcall_add__1 [108]
+15.2010s  1.9520us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        17  ptxcall_add__1 [110]
+15.2010s  1.5680us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        16  ptxcall_add__1 [112]
+15.2010s  1.5680us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        17  ptxcall_add__1 [114]
+15.2010s  1.5680us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        16  ptxcall_add__1 [116]
+15.2010s  1.5680us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        17  ptxcall_add__1 [118]
+15.2010s  1.5680us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        16  ptxcall_add__1 [120]
+15.2010s  1.6000us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        17  ptxcall_add__1 [122]
+15.2010s  1.8880us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        16  ptxcall_add__1 [124]
+15.2010s  1.5680us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        17  ptxcall_add__1 [126]
+15.2010s  1.1840us                    -               -         -         -         -       80B  64.437MB/s      Device    Pageable  Quadro M1000M (         1         7  [CUDA memcpy DtoH]
+15.2011s  1.1840us                    -               -         -         -         -       80B  64.437MB/s      Device    Pageable  Quadro M1000M (         1         7  [CUDA memcpy DtoH]
+15.2011s  1.3120us                    -               -         -         -         -       80B  58.151MB/s      Device    Pageable  Quadro M1000M (         1         7  [CUDA memcpy DtoH]</code></pre><p>Let&#39;s talk through what this output means. First there are a series of lines that look something like this:</p><pre><code class="language-none">Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
+15.1992s  1.2480us                    -               -         -         -         -       80B  61.133MB/s    Pageable      Device  Quadro M1000M (         1         7  [CUDA memcpy HtoD]</code></pre><p>These lines are describing the process of copying data from host to device (<code>[CUDA memcpy HtoD]</code>). We can see this is happening in stream 7. Next we see lines that look like these:</p><pre><code class="language-none">Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
+15.2010s  2.2720us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        16  ptxcall_add__1 [108]
+15.2010s  1.9520us              (1 1 1)         (1 1 1)        32        0B        0B         -           -           -           -  Quadro M1000M (         1        17  ptxcall_add__1 [110]</code></pre><p>These lines are executing the kernel. There are two things to notice here:</p><ol><li><p>The Grid Size and Block Size are both <code>(1 1 1)</code>, indicating that the kernel is executing sequentially. If you look back at the example script you will see that this is as expected - we always call the kernel on 1 thread and 1 block (the default number of threads and blocks). If you specified more threads or blocks to <code>@cuda</code> these fields would change.</p></li><li><p>The first line executes in stream 16 and the second executes in stream 17. Again, if you look back at the example script this is as expected - we create two streams then execute our kernel alternately in each stream.</p></li></ol><p>Finally, there are some lines copying data back from device to host:</p><pre><code class="language-none">Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
+15.2010s  1.1840us                    -               -         -         -         -       80B  64.437MB/s      Device    Pageable  Quadro M1000M (         1         7  [CUDA memcpy DtoH]</code></pre><p>This occurs in stream 7 again.</p><h1><a class="nav-anchor" id="Zoom-in-on-the-kernel-1" href="#Zoom-in-on-the-kernel-1">Zoom in on the kernel</a></h1><p>One of the main take homes of the profiling above should be that most of the execution time is taken up copying data. Let&#39;s imagine that we decided we weren&#39;t interested in profiling data transfer and just wanted to profile the kernel. We could modify our example script so it looked like below:</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv
+using Test
+
+# Kernel
+function add!(a,b,c, index)
+    c[index] = a[index] + b[index]
+    return nothing
+end
+
+function main()
+
+    # Initialise a, b and c
+    a = CuArrays.CuArray(fill(0, 10))
+    b = CuArrays.CuArray(fill(0, 10))
+    c = CuArrays.CuArray(fill(0, 10))
+
+    # Put values in a and b
+    for i in 1:10
+        a[i] = -i
+        b[i] = i * i
+    end
+
+    # Create two streams
+    s1 = CuStream()
+    s2 = CuStream()
+
+    # Call add! asynchronously in two streams
+    for i in 1:2:min(length(a), length(b), length(c))
+        @cuda threads = 1 stream = s1 add!(a,b,c, i)
+        CUDAdrv.@profile @cuda threads = 1 stream = s1 add!(a,b,c, i)
+        @cuda threads = 1 stream = s2 add!(a,b,c, i+1)
+    end
+
+    # Copy arrays back to host (CPU)
+    a=Array(a)
+    b=Array(b)
+    c=Array(c)
+
+    # Check the addition worked
+    for i in 1:length(a)
+        @test a[i] + b[i] ≈ c[i]
+    end
+
+end
+
+main()</code></pre><p>Notice that we no longer use <code>CUDAdrv.@profile</code> to profile <code>main()</code>, but we now use it to profile our call to <code>@cuda threads = 1 stream = s1 add!(a,b,c, i)</code>. Now we call</p><pre><code class="language-none">$ nvprof --profile-from-start off julia gpu_vector_sums_streams.jl</code></pre><p>from the command line, and get the following output:</p><pre><code class="language-none">Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+GPU activities:  100.00%  10.304us         5  2.0600us  1.8560us  2.3040us  ptxcall_add__1
+API calls:   75.82%  11.778ms         5  2.3556ms  1.4952ms  2.6888ms  cuLaunchKernel
+       24.17%  3.7540ms         5  750.79us     864ns  961.91us  cuCtxGetCurrent
+        0.01%  2.1640us         1  2.1640us  2.1640us  2.1640us  cuDeviceGetCount</code></pre><p>Since we are just profiling the kernel now, unsurprisingly we find that 100% of the profiled GPU time was spent executing the kernel. The output to</p><pre><code class="language-none">$ nvprof --profile-from-start off --print-gpu-trace julia gpu_vector_sums_streams.jl</code></pre><p>is shown below:</p><pre><code class="language-none">Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*           Device   Context    Stream  Name
+14.9673s  2.0800us              (1 1 1)         (1 1 1)        32        0B        0B  Quadro M1000M (         1        14  ptxcall_add__1 [54]
+16.9861s  1.7920us              (1 1 1)         (1 1 1)        32        0B        0B  Quadro M1000M (         1        14  ptxcall_add__1 [62]
+19.0047s  2.0480us              (1 1 1)         (1 1 1)        32        0B        0B  Quadro M1000M (         1        14  ptxcall_add__1 [70]
+21.0233s  1.8560us              (1 1 1)         (1 1 1)        32        0B        0B  Quadro M1000M (         1        14  ptxcall_add__1 [78]
+23.0424s  1.8880us              (1 1 1)         (1 1 1)        32        0B        0B  Quadro M1000M (         1        14  ptxcall_add__1 [86]</code></pre><p>Again, all of the data transfer steps have vanished from the profiling output, since we have only profiled kernel execution. Notice that we see 5 lines of output here, corresponding to 5 calls of the kernel, and that the kernel is always called in the same stream, because we only profiled calls to the kernel in stream <code>s1</code>.</p><p>Hopefully this section has shown some of the methods you can use to profile GPU software that you write in Julia. In the next section, we will discuss things to be aware of when thinking about performance.</p><footer><hr/><a class="previous" href="../Challenges/"><span class="direction">Previous</span><span class="title">Challenges in Julia GPU Software Development</span></a><a class="next" href="../Performance_thoughts/"><span class="direction">Next</span><span class="title">Thoughts on Performance</span></a></footer></article></body></html>

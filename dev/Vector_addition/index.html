@@ -5,7 +5,7 @@
         c[tid] = a[tid] + b[tid]
         tid += 1
     end
-end</code></pre><p>The function <code>add!()</code> takes three vectors (<code>a</code>, <code>b</code>  and <code>c</code>), adds each element of <code>a</code> and <code>b</code> together and stores the result in <code>c</code>. Note that we do not explicitly return <code>c</code>, because the exclamation mark at the end of <code>add!()</code> indicates that <code>add!()</code> is a function that modifies it&#39;s arguments.</p><p>We could call add! in a Julia script like this:</p><pre><code class="language-none">function main()
+end</code></pre><p>The function <code>add!()</code> takes three vectors (<code>a</code>, <code>b</code>  and <code>c</code>), adds each element of <code>a</code> and <code>b</code> together and stores the result in <code>c</code>.</p><p>We could call add! in a Julia script like this:</p><pre><code class="language-none">function main()
 
     # Make three vectors
     a = Vector{Any}(fill(undef, 10))
