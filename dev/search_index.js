@@ -353,22 +353,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "Summary/#",
-    "page": "Summary",
-    "title": "Summary",
-    "category": "page",
-    "text": ""
-},
-
-{
-    "location": "Summary/#Summary-1",
-    "page": "Summary",
-    "title": "Summary",
-    "category": "section",
-    "text": "Table of GPU Julia resources and what they can do?"
-},
-
-{
     "location": "Further_Reading/#",
     "page": "Further Reading",
     "title": "Further Reading",
@@ -381,7 +365,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Further Reading",
     "title": "Further Reading",
     "category": "section",
-    "text": "CUDA by Example Githubs for packages"
+    "text": "I hope you found this tutorial informative and that you now feel ready to write your own GPU software in Julia. Here are some additional resources that you might find useful on your GPU journey:[The CUDAdrv documentation](http://juliagpu.github.io/CUDAdrv.jl/stable/)\n[The CUDAnative documentation](http://juliagpu.github.io/CUDAnative.jl/latest/)\n[The CuArrays documentation](https://juliagpu.gitlab.io/CuArrays.jl/tutorials/generated/intro/)\n[JuliaGPU github](https://github.com/JuliaGPU). We covered the CUDAdrv, CUDAnative and CuArrays packages in this tutorial, but there are lots of other Julia packages enabling GPU software development out there. This github profile contains a list of Julia GPU package repositories.\n\'CUDA by Example, An Introduction to General-Purpose GPU Programming\' by Jason Sanders and Edward Kandrot. This textbook teaches CUDA C as oppose to Julia, but as CUDAnative is closely based on CUDA C you may still find this a useful read. Good for learning the underlying theory and concepts.\n[NVIDIA\'s documentation](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html). Again, this is for CUDA C, but many of the functions in CUDAnative and CUDAdrv are analogous to CUDA C functions."
 },
 
 {
@@ -397,7 +381,7 @@ var documenterSearchIndex = {"docs": [
     "page": "About the Author",
     "title": "Jenni Westoby",
     "category": "section",
-    "text": "I am a PhD student studying bioinformatics (computational biology) at the University of Cambridge and the Wellcome Trust Sanger Institute. I got interested in GPU software development because of its potential to accelerate bioinformatics software. I hope you enjoyed reading this tutorial and that you found it useful :)"
+    "text": "(Image: )I am a PhD student studying bioinformatics (computational biology) at the University of Cambridge and the Wellcome Trust Sanger Institute. I am supervised by Professor Anne Ferguson-Smith and Dr Martin Hemberg. I got interested in GPU software development because of its potential to accelerate bioinformatics software. I hope you enjoyed reading this tutorial and that you found it useful."
 },
 
 ]}
