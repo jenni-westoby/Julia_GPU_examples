@@ -14,7 +14,6 @@ pages = Any[
 "Developing With GPUs" => Any["Vector_addition.md", "Vector_dot_product.md",
 "Streaming.md", "Challenges.md"],
 "Performance" => Any["Profiling.md", "Performance_thoughts.md"],
-"Summary" => "Summary.md",
 "Further Reading" => "Further_Reading.md",
 "About the Author" => "About_the_author.md"])
 
