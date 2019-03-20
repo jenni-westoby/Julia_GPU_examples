@@ -365,7 +365,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Further Reading",
     "title": "Further Reading",
     "category": "section",
-    "text": "I hope you found this tutorial informative and that you now feel ready to write your own GPU software in Julia. Here are some additional resources that you might find useful on your GPU journey:"
+    "text": "I hope you found this tutorial informative and that you now feel ready to write your own GPU software in Julia. Here are some additional resources that you might find useful on your GPU journey:The CUDAdrv documentation\nThe CUDAnative documentation\nThe CuArrays documentation\nJuliaGPU github. We covered the CUDAdrv, CUDAnative and CuArrays packages in this tutorial, but there are lots of other Julia packages enabling GPU software development out there. This github profile contains a list of Julia GPU package repositories.\n\'CUDA by Example, An Introduction to General-Purpose GPU Programming\' by Jason Sanders and Edward Kandrot. This textbook teaches CUDA C as oppose to Julia, but as CUDAnative is closely based on CUDA C you may still find this a useful read. Good for learning the underlying theory and concepts.\nNVIDIA\'s documentation. Again, this is for CUDA C, but many of the functions in CUDAnative and CUDAdrv are analogous to CUDA C functions."
 },
 
 {
