@@ -12,7 +12,7 @@ We can use a tool from the CUDA toolkit called ```nvprof``` for profiling. The f
 $ nvprof --profile-from-start off /path/to/julia /path/to/julia/script
 ```
 
-Note that we use ```--profile-from-start off``` to tell ```nvprof``` not to start profiling until we tell it to. There are several reasons we might not want to have ```nvprof``` start profiling straight away. One reason is that Julia is a Just-In-Time (JIT) compiled language. We often don't want to include the time taken to compile our scripts in our profiling estimates. Another reason is that GPU software usually executes some commands on CPU as well as GPU, and we may only want to profile commands executed on GPU. Finally, we might only be interested in a particular bit of our script, such as the kernel or the time taken to copy data from host to device. We can turn ```--profile-from-start``` off to enable us to profile just the bit we are interested.
+Note that we use ```--profile-from-start off``` to tell ```nvprof``` not to start profiling until we tell it to. There are several reasons we might not want to have ```nvprof``` start profiling straight away. One reason is that Julia is a Just-In-Time (JIT) compiled language. We often don't want to include the time taken to compile our scripts in our profiling estimates. Another reason is that GPU software usually executes some commands on CPU as well as GPU, and we may only want to profile commands executed on GPU. Finally, we might only be interested in a particular bit of our script, such as the kernel or the time taken to copy data from host to device. We can turn ```--profile-from-start``` off to enable us to profile just the bit we are interested in.
 
 # nvprof
 

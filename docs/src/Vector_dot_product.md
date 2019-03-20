@@ -59,7 +59,7 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
             cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
         end
         sync_threads()
-        i/=2
+        i = i ÷ 2
     end
 
     # cache[1] now contains the sum of vector dot product calculations done in
@@ -98,7 +98,7 @@ tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
 
 This is the first time we've mixed up thread and block indexes in the same kernel! So what's going on?
 
-The aim of this line of code is to generate a unique thread index for each thread. ```threadIdx().x``` gives the index for the current thread inside the current block. So ```threadIdx().x``` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so ```threadIdx().x = 1```), a second thread with the index 2 (```threadIdx().x = 2```) and so on, so we need a different approach to generate a unique thread index. ```blockDim().x``` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index (```blockIdx().x```) and the number of threads in a block (```blockDim().x```), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (```threadIdx().x```) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.
+The aim of this line of code is to generate a unique thread index for each thread. ```threadIdx().x``` gives the index for the current thread inside the current block. So ```threadIdx().x``` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so ```threadIdx().x = 1```), a second thread with the index 2 (```threadIdx().x = 2```) and so on, so we need a different approach to generate a unique thread index. ```blockDim().x``` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index minus one (```blockIdx().x - 1```) and the number of threads in a block (```blockDim().x```), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (```threadIdx().x```) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.
 
 ![](images/GPU_tid.png)
 
@@ -123,7 +123,7 @@ while tid < N
 end
 ```
 
-For context, ```N``` is the number of elements in ```a``` (which is the same as the number of elements in ```b```). So while ```tid``` less than the number of elements in ```a```, we increment the value of temp by the product of ```a[tid + 1]``` and ```b[tid + 1]``` - this is the core operation in a vector dot product. Then, we increment ```tid``` by the number of threads in a block (```blockDim().x```) times the number of blocks in a grid (```gridDim().x```), which is the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.
+For context, ```N``` is the number of elements in ```a``` (which is the same as the number of elements in ```b```). So while ```tid``` less than the number of elements in ```a```, we increment the value of ```temp`` by the product of ```a[tid + 1]``` and ```b[tid + 1]``` - this is the core operation in a vector dot product. Then, we increment ```tid``` by the number of threads in a block (```blockDim().x```) multiplied by the number of blocks in a grid (```gridDim().x```), which is the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.
 
 After exiting the while loop, we write the value calculated in temp to shared memory:
 
@@ -157,7 +157,7 @@ while i!=0
         cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
     end
     sync_threads()
-    i/=2
+    i = i ÷ 2
 end
 ```
 

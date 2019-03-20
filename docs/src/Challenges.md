@@ -28,7 +28,7 @@ The first error message broadly means that you tried to do something which could
 
 The second error message indicates that your code compiled successfully (unless it is preceded by the first error message, or another compilation error) but that something went wrong during runtime, hence it returned something other than ```nothing```.
 
-Unfortunately, you will never see the sort of error message you are probably accustomed to in Julia, where a description of why the code failed to compile or run and a line number are provided. A description of why this is and macros you can use to help debug are described here: http://juliagpu.github.io/CUDAnative.jl/latest/man/troubleshooting.html. In practice, I often debug by iteratively commenting out half of the remaining lines of code in my kernel to identify which line(s) are causing problems.
+Unfortunately, you will never see the sort of error message you are probably accustomed to in Julia, where a description of why the code failed to compile or run and a line number are provided. A description of why this is and macros you can use to help debug are described [here](http://juliagpu.github.io/CUDAnative.jl/latest/man/troubleshooting.html). In practice, I often debug by iteratively commenting out half of the remaining lines of code in my kernel to identify which line(s) are causing problems.
 
 # CUDAnative Does Not Support All of Julia
 
