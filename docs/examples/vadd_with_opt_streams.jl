@@ -1,5 +1,4 @@
-using CUDAdrv
-using Test
+using CUDAdrv, Test
 
 # 'Turn on' device
 dev = CuDevice(0)
@@ -54,6 +53,10 @@ for i in 1:2:dims
 
 
 end
+
+@show a
+@show b
+@show c
 
 # Check it worked
 @test a+b ≈ c

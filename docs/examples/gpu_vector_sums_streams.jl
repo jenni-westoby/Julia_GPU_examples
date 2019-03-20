@@ -27,7 +27,6 @@ function main()
     # Call add! asynchronously in two streams
     for i in 1:2:min(length(a), length(b), length(c))
         @cuda threads = 1 stream = s1 add!(a,b,c, i)
-        CUDAdrv.@profile @cuda threads = 1 stream = s1 add!(a,b,c, i)
         @cuda threads = 1 stream = s2 add!(a,b,c, i+1)
     end
 
