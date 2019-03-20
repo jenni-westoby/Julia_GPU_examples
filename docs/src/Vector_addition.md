@@ -4,7 +4,7 @@ Congratulations! You (finally?) got your environment set up and are ready to sta
 
 # Party time
 
-We're going to start our GPU adventure by considering a very simple program which adds two vectors together. If we wanted to do this on a CPU, we might write a function like this:
+We are going to start our GPU adventure by considering a very simple program which adds the elements of two vectors. If we wanted to do this on a CPU, we might write a function like this:
 
 ```
 function add!(a,b,c)
@@ -50,7 +50,7 @@ main()
 
 # Adding Vectors on a GPU
 
-As exciting as the example above was, the eagle eyed amongst you may have noticed that it doesn't actually run on a GPU. Let's fix that.
+As exciting as the example above was, the eagle eyed reader may have noticed that it does not actually run on a GPU. We can fix that.
 
 The first thing we need to do is load packages that will enable us to run Julia code on GPUs.
 
@@ -58,7 +58,7 @@ The first thing we need to do is load packages that will enable us to run Julia 
 using CuArrays, CUDAnative, CUDAdrv
 ```
 
-CuArrays is a package that allows us to easily transfer arrays from CPU to GPU. CUDAnative allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call CUDAdrv in our example, but much of CUDAnative depends on CUDAdrv to work.
+[CuArrays](https://juliaobserver.com/packages/CuArrays) is a package that allows us to easily transfer arrays from CPU to GPU. [CUDAnative](https://juliaobserver.com/packages/CUDAnative) allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call [CUDAdrv](https://juliaobserver.com/packages/CUDAdrv) in our example, but much of CUDAnative depends on CUDAdrv to work.
 
 Next, we need to identify what part of our example could benefit from being ported to GPU. Since most of the actual work is being done in ```add!()```, this is an obvious target. Let's modify ```add!()``` so that it could be executed on a GPU.
 
@@ -82,7 +82,7 @@ Aside from now referring to ```add!()``` as a kernel rather than a function, the
 return nothing
 ```
 
-CUDA requires that kernels must return nothing. Aside from meaning that we have to add this line to all of our kernels, this also means we potentially have to think a bit about how we will get the results of our GPU computations out of our kernels, since we can't directly ```return``` our results. As ```add!()``` is a function which alters its arguments, this is not actually a problem which requires much thought in our example.
+CUDA requires that kernels must return nothing. Aside from meaning that we have to add this line to all of our kernels, this also means we potentially have to think a bit about how to get the results of our GPU computations out of our kernel, since we cannot directly ```return``` our results. As ```add!()``` is a function which alters its arguments, this is not actually a problem which requires much thought in our example.
 
 Let's see how ```main()``` has changed in the GPU version of our example.
 
@@ -96,8 +96,8 @@ function main()
 
     # Fill a and b with values
     for i in 1:10
-        a[i] = -i
-        b[i] = i * i
+        a[i] = i
+        b[i] = i * 2
     end
 
     # Execute the kernel
@@ -128,7 +128,7 @@ function main()
     c = CuArrays.CuArray(fill(0, 10))
 ```
 
-Like in the CPU version of main, we start by making three arrays. However here, instead of making three standard Julia arrays, we make three CuArrays. CuArrays are GPU compatible arrays. For reasons we will gloss over here, ordinary Julia arrays would not work in our example. Fortunately, CuArrays are a subtype of AbstractArrays and can often be treated exactly the same way as a normal AbstractArray. Many standard array operations work out of the box on CuArrays, you can find a list [here](https://github.com/JuliaGPU/CuArrays.jl). If you are curious why we can't use a normal AbstractArray or Array here, see [Challenges in Julia GPU Software Development](Challenges.md) for details.
+Like in the CPU version of main, we start by making three arrays. However here, instead of making three standard Julia arrays, we make three CuArrays. CuArrays are GPU compatible arrays. For reasons we will gloss over here, ordinary Julia arrays would not work in our example. Fortunately, CuArrays are a subtype of [AbstractArrays](https://docs.julialang.org/en/v1/base/arrays/index.html) and can often be treated exactly the same way as a normal AbstractArray. Many standard array operations work out of the box on CuArrays, you can find a list [here](https://github.com/JuliaGPU/CuArrays.jl). If you are curious why we cannot use a normal AbstractArray or Array here, see the upcoming chapter [Challenges in Julia GPU Software Development](Challenges.md) for details.
 
 The next step of ```main()``` is virtually identical to the CPU version.
 
@@ -149,9 +149,9 @@ In the next step we actually execute the kernel:
 @cuda add!(a,b,c)
 ```
 
-This looks remarkably similar to the CPU version of main at this step, especially when you consider that this line is responsible for executing ```add!()``` on a different type of computing chip. The magic is contained in ```@cuda```. ```@cuda``` is part of the CUDAnative package, and behind the scenes is responsible for transforming the ```add!()``` function into a form recognised and executed by the GPU.
+This looks remarkably similar to the CPU version of main at this step, especially when you consider that this line is responsible for executing ```add!()``` on a different type of computing chip. The magic is contained in the ```@cuda``` macro. ```@cuda``` is part of the CUDAnative package, and behind the scenes is responsible for transforming the ```add!()``` function into a form recognised and executed by the GPU.
 
-If you are familiar with CUDA C or C++, you might be surprised that main does not include any step to copy ```a```, ```b``` and ```c``` from the host (CPU) to the device (GPU). This is taken care of behind the scenes by CUDAnative and CuArrays. However, you do explicitly need to copy your CuArrays back from device (GPU) to host (CPU), which is what happens in the next step of ```main()```:
+If you are familiar with CUDA C or C++, you might be surprised that ```main()``` does not include any step to copy ```a```, ```b``` and ```c``` from the host (CPU) to the device (GPU). This is taken care of behind the scenes by CUDAnative and CuArrays. However, you do explicitly need to copy your CuArrays back from device (GPU) to host (CPU), which is what happens in the next step of ```main()```:
 
 ```
 # Copy a,b and c back from the device to the host
@@ -176,7 +176,7 @@ main()
 
 Note that in both versions of ```main()```, the sanity check is carried out on the host (CPU), not the device (GPU).
 
-So we've written our first Julia script that will execute on a GPU! That's pretty cool. But again, the eagle eyed amongst you might be grumbling. Whilst our script does run on a GPU, there is absolutely no parallelism in it. In fact, it is likely that the GPU version of our script is actually slower than the CPU version, given that GPU processors are generally slower than CPU processors AND we had to copy a load of data from host to device and back again in the GPU version, which we didn't have to bother with in the CPU version. Time to introduce some parallelism to our script.
+So we have written our first Julia script that will execute on a GPU! That is pretty cool. But again, the eagle eyed amongst you might be grumbling. Whilst our script does run on a GPU, there is absolutely no parallelism in it. In fact, it is likely that the GPU version of our script is actually slower than the CPU version, given that GPU processors are generally slower than CPU processors AND we had to copy the data from host to device and back again in the GPU version, which we did not have to bother with in the CPU version. Time to introduce some parallelism to our script.
 
 # Parallelising over threads
 
@@ -219,7 +219,7 @@ The only line that has changed is this line:
 @cuda threads=10 add!(a,b,c)
 ```
 
-To make the kernel run on 10 threads, we have added the argument ```threads=10``` before our call to ```add!(a,b,c)```. That's it. However, let's think about what this will actually do. Running our current version of ```add!()``` over 10 threads simply amounts to running ```add!()``` 10 times simultaneously. Obviously, this will not be any faster than running ```add!()``` once.
+To make the kernel run on 10 threads, we have added the argument ```threads=10``` before our call to ```add!(a,b,c)```. That is it. However, let's think about what this will actually do. Running our current version of ```add!()``` over 10 threads simply amounts to running ```add!()``` 10 times simultaneously. Obviously, this will not be any faster than running ```add!()``` once.
 
 Let's modify ```add!()``` so we can make a more productive use of the 10 threads.
 
