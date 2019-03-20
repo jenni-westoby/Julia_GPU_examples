@@ -37,7 +37,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Some Background on GPUs",
     "title": "What are GPUs?",
     "category": "section",
-    "text": "You have probably heard of a type of computer chip called a CPU. GPUs are a different type of computer chip. The major difference between CPUs and GPUs is how each chip is organised. Whereas CPUs tend to have a small number of threads, GPUs can have orders of magnitudes more. On GPUs, you can write code that parallelises across thousands of threads, something that simply would not be possible on CPUs without great effort and expense."
+    "text": "You have probably heard of a type of computer chip called a central processing unit (CPU). GPUs are a different type of computer chip. The major difference between CPUs and GPUs is how each chip is organised. Whereas CPUs tend to have a small number of threads, GPUs can have orders of magnitudes more. On GPUs, you can write code that parallelises across thousands of threads, something that would be impossible on CPUs without great effort and expense."
 },
 
 {
