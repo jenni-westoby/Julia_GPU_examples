@@ -1,15 +1,15 @@
 # Set-up Julia
 
-This section assumes that you have already carried out the instructions in 'Accessing GPUs' and that you now have access to a machine which
+This section assumes that you have already carried out the instructions in [Accessing GPUs](Accessing_GPUs.md) and that you now have access to a machine which
 
 1. Contains a CUDA-compatible GPU, and
 2. Has a working CUDA toolkit installation.
 
 If this is not the case, many of the below steps will not work because they depend on the two conditions above being true.
 
-Assuming you did follow the instructions in "Accessing GPUs" and you have access to a computer with a GPU and a working CUDA toolkit installation, carry out the steps below to get a Julia environment that you can run this tutorial in.
+Assuming you did follow the instructions in "Accessing GPUs" and you have access to a computer with a GPU and a working CUDA toolkit installation, carry out the steps below to create a Julia environment that you can run this tutorial in.
 
-**Step 1:** Follow [these instructions](https://julialang.org/downloads/) to install Julia 1.0.3 if you haven't already done so. I recommend against using your OS's package manager to install Julia, you are unlikely to get the correct version.
+**Step 1:** Follow [these instructions](https://julialang.org/downloads/) to install Julia 1.0.3 if you have not already done so. I recommend against using your OS's package manager to install Julia as you are unlikely to get the correct version.
 
 **Step 2** Within Julia, install CUDAdrv, CUDAnative and CuArrays using the commands below:
 
@@ -20,7 +20,7 @@ add CUDAnative
 add CuArrays
 ```
 
-Note - this step is likely to fail if you do not have a working CUDA installation.
+**Note** - this step is likely to fail if you do not have a working CUDA installation.
 
 # Common Problems
 
