@@ -88,7 +88,7 @@ end
 
 Let's walk through what this for loop is doing. This for loop iterates over the length of the vectors in steps of size 2. In each iteration, we execute the kernel once in the first stream (```s1```) using ```i``` as an index for vector addition, and once in the second stream (```s2```) using ```i + 1``` as the index for vector addition. Thus, in each interation of the for loop the values of ```c[i]``` and ```c[i + 1]``` are calculated in seperate streams. ```main()``` then finishes as before by copying ```a```, ```b``` and ```c``` back to the host and checking that the results of the calculation are correct.
 
-Hopefully you agree that executing the kernel across two streams was extremely easy in this example. However, it was also fairly pointless. We basically wrote some extra code to execute add! on two elements of c at a time, whereas our previous example without streaming calculated every element of c in parallel using threads.
+Hopefully you agree that executing the kernel across two streams was extremely easy in this example. However, it was also fairly pointless. We basically wrote some extra code to execute ```add!()``` on two elements of ```c``` at a time, whereas our previous example without streaming calculated every element of ```c``` in parallel using threads.
 
 Streaming can really come in to its own when used to stagger data transfer and analysis between streams. This is possible in Julia for GPU applications, but comes with a health warning...
 
@@ -254,15 +254,15 @@ __global__ void kernel_vadd(const float *a, const float *b, float *c)
 }
 ```
 
-Even if you don't know C, hopefully you will be able to see that this function calculates a unique thread index (```i```) based on the block the thread is in and the thread's index within that block, then adds the values of ```a``` and ```b``` at that index and stores them in ```c```. This is very similar to many of the kernels we have written before. We can make PTX code from CUDA C by executing the following command in a terminal
+Even if you don't know C, hopefully you will be able to see that this function calculates a unique thread index (```i```) based on the block the thread is in and the thread's index within that block, then adds the values of ```a``` and ```b``` at that index and stores them in ```c```. This is very similar to many of the kernels we have written before. We can make PTX code from CUDA C scripts by executing the following command in a terminal
 
 ```
 nvcc --ptx /path/to/cuda_C_file.cu
 ```
 
-It is also possible to make PTX code from Julia code using functions in CUDAnative such as ```code_ptx()``` - see http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html# CUDAnative.code_ptx for details.
+It is also possible to make PTX code from Julia code using functions in CUDAnative such as ```code_ptx()``` - see [here](http://juliagpu.github.io/CUDAnative.jl/latest/lib/reflection.html) for details.
 
-Ok, so the outcome of all of the above is that we can now have a calleable GPU compatible function called ```vadd``` which performs vector addition. Next, we create our data:
+Ok, so the outcome of all of the above is that we can now have a GPU compatible function called ```vadd``` which we can call from a Julia script to perform vector addition. Next, we create our data:
 
 ```
 # Make data
@@ -280,7 +280,7 @@ buf_a1 = Mem.alloc(sizeof(Float32))
 buf_b1 = Mem.alloc(sizeof(Float32))
 ```
 
-Again, this is the first time we have had to do this because previously it was taken care of for us by CUDAnative. In our streaming strategy, we are going to copy one element of ```a``` and ```b``` to each stream, calculate the value of the corresponding value of ```c```, store that result in ```c```, then copy the value of ```c``` back to the host. This means we need to allocate space for one element of ```a```, ```b``` and ```c``` for each stream. There are two streams, so in practice this means we need to allocate space twice. In the code above, we are allocating space for one element of ```a``` and one element of ```b``` for the first stream. Each element in ```a``` and ```b``` is a ```Float32```, so we use ```sizeof()``` to work out how many bytes we need to allocate. We also need to allocate space for ```a``` and ```b``` in stream 2, so we write:
+Again, this is the first time we have had to do this because previously it was taken care of for us by CUDAnative. In our streaming strategy, we are going to copy one element of ```a``` and ```b``` to the device in each stream, calculate their sum and store that result in ```c``` on the device, then copy the value of ```c``` back to the host. This means we need to allocate space for one element of ```a```, ```b``` and ```c``` for each stream. There are two streams, so in practice this means we need to allocate space twice. In the code above, we are allocating space for one element of ```a``` and one element of ```b``` for the first stream. Each element in ```a``` and ```b``` is a ```Float32```, so we use ```sizeof()``` to work out how many bytes we need to allocate. We also need to allocate space for ```a``` and ```b``` in stream 2, so we write:
 
 ```
 # Allocate memory for a and b on device stream 2
@@ -288,7 +288,7 @@ buf_a2 = Mem.alloc(sizeof(Float32))
 buf_b2 = Mem.alloc(sizeof(Float32))
 ```
 
-Next, we allocate space for ```c``` on both streams and create the streams:
+Next, we allocate space for ```c``` in both streams and create the streams:
 
 ```
 # Allocate memory for c on device
@@ -330,7 +330,7 @@ end
 
 As before, we operate on the ```i```th element in one stream and the ```i + 1```th element in the other stream. In each stream, the order of operations is to copy (```Mem.upload!```) the value of the ```i```th or ```i + 1```th element of ```a``` and ```b``` from the host to the pre-allocated space on the device. Then we run the kernel (using ```cudacall```) and copy the result back to the host (```Mem.download!```).
 
-There are several things worth noting here. First, we must explicitly specify ```async = true``` to ```Mem.upload!``` and ```Mem.download!``` if we want them to execute asynchronously - as a default these functions are synchronous. Second, note that we call the kernel using ```cudacall``` rather than ```@cuda``` - this is because ```@cuda``` is part of CUDAnative which does not support asynchronous copies. Thirdly, note that we must specify which stream we are using for each of these functions - otherwise all of these functions will execute on the same stream as a default.
+There are several things worth noting here. First, we must explicitly specify ```async = true``` to ```Mem.upload!``` and ```Mem.download!``` if we want them to execute asynchronously - as a default these functions are synchronous. Second, note that we call the kernel using ```cudacall``` rather than ```@cuda``` - this is because ```@cuda``` is part of CUDAnative which does not support asynchronous data transfers. Thirdly, note that we must specify which stream we are using for each of these functions - otherwise all of these functions will execute on the same stream as a default.
 
 Finally, we finish our script by checking the results of our calculation and destroying the device context:
 
@@ -348,4 +348,4 @@ In the next section, we will consider some Julia specific aspects of writing GPU
 
 # References
 
-The data streaming and analysis example above was based on code taken from here: https://github.com/JuliaGPU/CUDAdrv.jl/tree/master/examples
+The data streaming and analysis example above was based on code taken from [here](https://github.com/JuliaGPU/CUDAdrv.jl/tree/master/examples).

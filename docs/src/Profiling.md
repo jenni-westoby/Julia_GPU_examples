@@ -173,7 +173,7 @@ Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMe
 15.2010s  1.1840us                    -               -         -         -         -       80B  64.437MB/s      Device    Pageable  Quadro M1000M (         1         7  [CUDA memcpy DtoH]
 ```
 
-This occurs in stream 7 again.
+This data transfer takes place in stream 7 again.
 
 # Zoom in on the kernel
 

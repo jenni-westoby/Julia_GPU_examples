@@ -9,7 +9,7 @@ If this is not the case, many of the below steps will not work because they depe
 
 Assuming you did follow the instructions in "Accessing GPUs" and you have access to a computer with a GPU and a working CUDA toolkit installation, carry out the steps below to get a Julia environment that you can run this tutorial in.
 
-**Step 1:** Follow the link instructions to install Julia 1.0.3 if you haven't already done so: https://julialang.org/downloads/. I recommend against using your OS's package manager to install Julia, you are unlikely to get the correct version.
+**Step 1:** Follow [these instructions](https://julialang.org/downloads/) to install Julia 1.0.3 if you haven't already done so. I recommend against using your OS's package manager to install Julia, you are unlikely to get the correct version.
 
 **Step 2** Within Julia, install CUDAdrv, CUDAnative and CuArrays using the commands below:
 
@@ -34,4 +34,4 @@ Try uninstalling the packages and re-installing them in the same order as me.
 
 **It turns out there is something wrong with my CUDA installation.**
 
-This is a very common problem. You could try following the instructions in "Set up your GPU" to install the CUDA toolkit. If none of the options there work for you then I'm afraid I am out of suggestions :(
+This is a very common problem. You could try following the instructions in [Accessing GPUs](Accessing_GPUs.md) to install the CUDA toolkit. If none of the options there work for you then I'm afraid I am out of suggestions :(

@@ -20,7 +20,6 @@ If you are going for option 3, things are about to get interesting.
 
 These are some instructions you can try following to get the GPU in your computer working in a way that Julia will be able to interact with it. I make no promises that they will work and will not offer support if they fail for you. These instructions assume you are working in a Linux environment. I don't know how to make your GPU work in a Windows or Mac environment.
 
-
 **Step 1:** Check that your computer has a GPU.
 
 **Step 2:** Check that your computer has a GPU that is actually supported by CUDA (CUDA is only supported on GPUs made by NVIDIA, and is not supported on old NVIDIA GPUs).
@@ -59,4 +58,4 @@ If your install has worked, the final command should print out some version info
 
 # Surely I don't really need to install a new operating system
 
-The CUDA toolkit and drivers are notoriously difficult to install. It might sound a bit mad, but installing a fresh version of Ubuntu 18.04 is the most reliable method for installing CUDA that I have found. Note, steps 4-6 are taken from the second answer here: https://askubuntu.com/questions/1028830/how-do-i-install-cuda-on-ubuntu-18-04, so a big thank you to eromod and N0rbert.
+The CUDA toolkit and drivers are notoriously difficult to install. It might sound a bit mad, but installing a fresh version of Ubuntu 18.04 is the most reliable method for installing CUDA that I have found. Note, steps 4-6 are taken from the second answer [here](https://askubuntu.com/questions/1028830/how-do-i-install-cuda-on-ubuntu-18-04).
