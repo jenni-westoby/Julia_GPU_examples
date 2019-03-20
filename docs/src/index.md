@@ -1,6 +1,6 @@
 # Learn to Develop GPU Software with Julia
 
-A number of packages have been developed for [Julia](https://julialang.org/) that enable developers to write code that will run on GPUs. But until now, open source documentation which would enable a developer to go from zero [CUDA](https://developer.nvidia.com/cuda-zone) knowledge to making effective use of these packages has not existed. This tutorial aims to change that. I will guide you through the full workflow of writing a basic program in Julia that will run on a GPU. Things you will learn from this tutorial include:
+A number of packages have been developed for [Julia](https://julialang.org/) that enable developers to write code that will run on graphics processing units ([GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit)). But until now, open source documentation which would enable a developer to go from zero [CUDA](https://developer.nvidia.com/cuda-zone) knowledge to making effective use of these packages has not existed. This tutorial aims to change that. I will guide you through the full workflow of writing a basic program in Julia that will run on a GPU. Things you will learn from this tutorial include:
 
 - What a GPU is and why writing code to run on GPUs might be useful.
 - How to set up your computer and install the graphics drivers necessary to make use of your GPU.
