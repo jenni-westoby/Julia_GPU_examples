@@ -2,7 +2,7 @@
 
 Following our example of vector addition in the previous section, you may be left wondering what the point of making a distinction between blocks and threads is. This section should make this clear.
 
-You may recall from "Some Background on GPUs" that GPUs are composed of grids of blocks, where each block contains threads. In the drawing below, we have deployed a grid of 16 blocks each containing 16 threads (```@cuda threads = 16, blocks = 16```)
+You may recall from "Some Background on GPUs" that GPUs are composed of grids of blocks, where each block contains threads. In the drawing below, we have deployed a grid of 16 blocks each containing 16 threads (```@cuda threads = 16, blocks = 16```).
 
 ![](images/grid_threads_blocks.png)
 
