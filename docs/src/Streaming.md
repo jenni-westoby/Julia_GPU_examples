@@ -240,7 +240,7 @@ So what do the contents of vadd.ptx look like?
 }
 ```
 
-Above are the contents of vadd.ptx - unless you are an assembly code expert I suspect you will agree this is not very informative. PTX stands for Parallel Thread eXecution and we will briefly discuss two ways to make PTX code in this tutorial. The first way to make PTX code is by compiling CUDA C code. So what did the CUDA C code that made this PTX look like?
+Above are the contents of vadd.ptx - unless you are an assembly code expert I suspect you will agree this is not very informative. PTX stands for Parallel Thread eXecution and we will briefly discuss two ways to make PTX code in this tutorial. The first way to make PTX code is by compiling CUDA C code. So what did the CUDA C code that made this PTX file look like?
 
 ```
 extern "C" {
@@ -254,7 +254,7 @@ __global__ void kernel_vadd(const float *a, const float *b, float *c)
 }
 ```
 
-Even if you don't know C, hopefully you will be able to see that this function calculates a unique thread index (```i```) based on the block the thread is in and the thread's index within that block, then adds the values of ```a``` and ```b``` at that index and stores them in ```c```. This is very similar to many of the kernels we have written before. We can make PTX code from CUDA C scripts by executing the following command in a terminal
+Even if you do not know C, hopefully you will be able to see that this function calculates a unique thread index (```i```) based on the block the thread is in and the thread's index within that block, then adds the values of ```a``` and ```b``` at that index and stores them in ```c```. This is very similar to many of the kernels we have written before. We can make PTX code from CUDA C scripts by executing the following command in a terminal
 
 ```
 nvcc --ptx /path/to/cuda_C_file.cu
@@ -342,7 +342,7 @@ Finally, we finish our script by checking the results of our calculation and des
 destroy!(ctx)
 ```
 
-This example demonstrates that it is possible to stream data transfer and analysis in Julia. However, it should be noted that the code we wrote was so low level that almost every line we wrote was directly analogous to a CUDA C command. I would argue that the benefit of writing a program such as this in Julia versus C is debateable. There might be situations where it makes sense to write this type of program in Julia (for example, if you already had a huge Julia code base, a small part of which you wanted to port to GPU), but often it might actually be easier to use C.
+This example demonstrates that it is possible to stream data transfer and analysis in Julia. However, it should be noted that the code we wrote was so low level that almost every line we wrote was directly analogous to a CUDA C command. I would agree that the benefit of writing a program such as this in Julia versus C is debateable. There might be situations where it makes sense to write this type of program in Julia (for example, if you already had a huge Julia code base, a small part of which you wanted to port to GPU), but often it might actually be easier to use C.
 
 In the next section, we will consider some Julia specific aspects of writing GPU compatible software.
 
