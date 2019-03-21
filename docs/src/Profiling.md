@@ -6,13 +6,13 @@ There are a number of reasons we might want to profile our GPU code, including:
 - To check that our kernel is executing on as many threads and blocks as we expect.
 - To check that our kernel is executing on as many streams as expected.
 
-We can use a tool from the CUDA toolkit called ```nvprof``` for profiling. The following command can be used to call nvprof to profile a specific Julia GPU program from the command line:
+We can use a tool from the CUDA toolkit called ```nvprof``` for profiling. The following command can be used to call [nvprof](https://devblogs.nvidia.com/cuda-pro-tip-nvprof-your-handy-universal-gpu-profiler/) to profile a specific Julia GPU program from the command line:
 
 ```
 $ nvprof --profile-from-start off /path/to/julia /path/to/julia/script
 ```
 
-Note that we use ```--profile-from-start off``` to tell ```nvprof``` not to start profiling until we tell it to. There are several reasons we might not want to have ```nvprof``` start profiling straight away. One reason is that Julia is a Just-In-Time (JIT) compiled language. We often don't want to include the time taken to compile our scripts in our profiling estimates. Another reason is that GPU software usually executes some commands on CPU as well as GPU, and we may only want to profile commands executed on GPU. Finally, we might only be interested in a particular bit of our script, such as the kernel or the time taken to copy data from host to device. We can turn ```--profile-from-start``` off to enable us to profile just the bit we are interested in.
+Note that we use ```--profile-from-start off``` to tell ```nvprof``` not to start profiling until we tell it to. There are several reasons we might not want to have ```nvprof``` start profiling straight away. One reason is that Julia is a Just-In-Time (JIT) compiled language. We often do not want to include the time taken to compile our scripts in our profiling estimates. Another reason is that GPU software usually executes some commands on CPU as well as GPU, and we may only want to profile commands executed on GPU. Finally, we might only be interested in a particular bit of our script, such as the kernel or the time taken to copy data from host to device. We can turn ```--profile-from-start``` off to enable us to profile just the bit we are interested in.
 
 # nvprof
 
@@ -37,8 +37,8 @@ function main()
 
     # Put values in a and b
     for i in 1:10
-        a[i] = -i
-        b[i] = i * i
+        a[i] = i
+        b[i] = i * 2
     end
 
     # Create two streams
@@ -73,7 +73,7 @@ The only change we have made to this example is to add this line at the end:
 CUDAdrv.@profile main()
 ```
 
-This line executes ```main()``` whilst activating the CUDA profiler. This signals to ```nvprof``` the point at which to start profiling. Notice that we have already called ```main()``` once in the line before we call ```CUDAdrv.@profile``` - this is to force ```main()``` to compile before we start profiling. If we don't call the function we want to profile once before we start profiling then our profiling estimates will include time spent compiling.
+This line executes ```main()``` whilst activating the CUDA profiler. This signals to ```nvprof``` the point at which to start profiling. Notice that we have already called ```main()``` once in the line before we call ```CUDAdrv.@profile``` - this is to force ```main()``` to compile before we start profiling. If we do not call the function we want to profile once before we start profiling then our profiling estimates will include the time spent compiling.
 
 Having modified our example script to invoke the ```nvprof``` profiler, we can now get profiling information by executing the following on the command line:
 
@@ -177,7 +177,7 @@ This data transfer takes place in stream 7 again.
 
 # Zoom in on the kernel
 
-One of the main take homes of the profiling above should be that most of the execution time is taken up copying data. Let's imagine that we decided we weren't interested in profiling data transfer and just wanted to profile the kernel. We could modify our example script so it looked like below:
+One of the main take home points of the profiling above is that most of the execution time is taken up copying data. Let's imagine that we decided we were not interested in profiling data transfer and just wanted to profile the kernel. We could modify our example script so it looked like below:
 
 ```
 using CuArrays, CUDAnative, CUDAdrv
