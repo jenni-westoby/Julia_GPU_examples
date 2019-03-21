@@ -18,4 +18,8 @@ Software written for GPUs rarely runs entirely on GPUs. Usually, at least a smal
 
 # Kernel
 
-A common way to organise code that will run on a GPU is to write a function that will execute on the GPU. This function is typically called after all the data required by the function has been copied from host (CPU) to device (GPU). Because the function is typically executed thousands of times in parallel, the function that will execute on the GPU is given the special name of '__kernel__'. 
+A common way to organise code that will run on a GPU is to write a function that will execute on the GPU. This function is typically called after all the data required by the function has been copied from host (CPU) to device (GPU). Because the function is typically executed thousands of times in parallel, the function that will execute on the GPU is given the special name of '__kernel__'.
+
+# CUDA
+
+We will refer a lot to CUDA in this tutorial, so what is it? The CUDA Architecture is the architecture used by NVIDIA's General Purpose GPUs (GPGPUs). To facilitate using GPUs with this architecture for general purpose computing, NVIDIA created CUDA C, a language closely based on C. They additionally created the CUDA toolkit, which is required to compile CUDA C code. Many of the functions in CUDAnative and CUDAdrv, two of the Julia packages covered in this tutorial, are highly analogous to functions in CUDA C. These packages depend upon the CUDA toolkit or libraries from it, and rely upon the GPU they are running on having a CUDA architecture.  

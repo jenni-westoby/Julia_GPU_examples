@@ -58,7 +58,7 @@ function main()
     # So instead we locally define these and pass them explicitly as arguments to
     # the kernel
     N::Int64 = 33 * 1024
-    threadsPerBlock::Int64 = 256
+    threadsPerBlock::Int64 = 2000
     blocksPerGrid::Int64 = min(32, (N + threadsPerBlock - 1) / threadsPerBlock)
 
     # Create a,b and c
@@ -77,8 +77,6 @@ function main()
     @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
     (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    CUDAdrv.@profile @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
-    (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     # Copy c back from the gpu (device) to the host
     c = Array(c)
 
