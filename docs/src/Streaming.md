@@ -1,12 +1,12 @@
 # Streaming
 
-In CUDA, a stream is a sequence of operations executed in order on a device. We can use multiple streams to execute multiple sequences of operations sequentially. A common reason for using multiple streams in GPU programming is to 'hide' the time taken for data transfer. Often copying data between the host and the device is one of the slowest steps in a GPU program. By writing your program with streams, you can split your data into chunks and have the GPU analysing a chunk in one stream whilst simultaneously copying a chunk of data to the GPU in another stream.
+In CUDA, a stream is a sequence of operations executed in order on a device. Streams are nifty since they allow us to execute operations in parallel. An important feature is that streams do not have to carry out the same operations, so you can for example have one stream copying data and another running the analysis. Often copying data between the host and the device is one of the slowest steps in a GPU program. By writing your program with streams, you can speed up execution by splitting your data into chunks and have the GPU analysing a chunk in one stream whilst simultaneously copying a chunk of data to the GPU in another stream.
 
 It should be noted that Julia's support for streaming in GPU programming is still rudimentary. As you will see, it is easy to stream kernel execution (analysis), but the ideal of streaming both data transfer and analysis is more challenging. Streaming both data transfer and analysis will require us to write much lower level code than is usually seen in Julia. Let's start with the simpler task of streaming our analysis.
 
 # Streaming our Analysis
 
-In this example, we will return to our favourite problem of vector addition. A script which will carry out vector addition in two streams is shown below:
+In this example, we return to our favourite problem of vector addition. A script which will carry out vector addition in two streams is shown below:
 
 ```
 using CuArrays, CUDAnative, CUDAdrv
@@ -27,8 +27,8 @@ function main()
 
     # Put values in a and b
     for i in 1:10
-        a[i] = -i
-        b[i] = i * i
+        a[i] = i
+        b[i] = i * 2
     end
 
     # Create two streams
@@ -168,7 +168,7 @@ end
 destroy!(ctx)
 ```
 
-This is probably looking pretty alien at this point - don't worry, we will work through it slowly. Starting from the beginning:
+This is probably looking pretty alien at this point - do not worry, we will work through it slowly. Starting from the beginning:
 
 ```
 using CUDAdrv, Test
@@ -178,7 +178,7 @@ dev = CuDevice(0)
 ctx = CuContext(dev)
 ```
 
-The script starts as usual by loading some Julia packages. Then there are two lines we haven't seen before calling ```CuDevice``` and ```CuContext```. These two lines essentially work together to create a context on the GPU. A GPU context can be thought of as analogous to a CPU process, so by running these two lines we are creating an address space and allocated resources on the GPU where our kernel can run and we can copy data. Once we have finished working on the GPU, we will need to ```destroy``` our context so the system can clean up the resources allocated there. Both creating the context and destroying it are taken care of behind the scenes by CUDAnative, which is why we have been able to ignore these functions until now.
+The script starts as usual by loading some Julia packages. Then there are two lines we have not seen before calling ```CuDevice``` and ```CuContext```. These two lines essentially work together to create a __context__ on the GPU. A GPU context can be thought of as analogous to a CPU process, so by running these two lines we are creating an address space and allocated resources on the GPU where our kernel can run and where we can copy data. Once we have finished working on the GPU, we will need to ```destroy``` our context so the system can clean up the resources allocated there. Both creating the context and destroying it are taken care of behind the scenes by CUDAnative, which is why we have been able to ignore these functions until now.
 
 The lines of code that follow context creation will either delight or alarm you, depending on your relationship with C:
 
