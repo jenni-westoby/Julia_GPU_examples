@@ -24,9 +24,9 @@ We could call ```add!()``` in a Julia script like this:
 function main()
 
     # Make three vectors
-    a = Vector{Any}(fill(undef, 10))
-    b = Vector{Any}(fill(undef, 10))
-    c = Vector{Any}(fill(undef, 10))
+    a = Vector{Any}(fill(0, 10))
+    b = Vector{Any}(fill(0, 10))
+    c = Vector{Any}(fill(0, 10))
 
     # Fill a and b with values
     for i in 1:10
