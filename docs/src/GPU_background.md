@@ -10,7 +10,7 @@ You have probably heard of a type of computer chip called a central processing u
 
 ![](images/grid_threads_blocks.png)
 
-Each GPU contains a '__grid__' of '__blocks__'. Each block in that grid is itself composed of a matrix of '__threads__'. Programs written to run on GPUs can be parallelised over blocks or threads or both. Each block has an index representing its position in the grid, and each thread has an index representing its position within its block.
+Each GPU contains a '__grid__' of '__blocks__'. Each block in that grid is itself composed of a matrix of '__threads__'. Programs written to run on GPUs can be parallelised over blocks or threads or both. Each block has an index representing its position in the grid, and each thread has an index representing its position within its block. When we run a function in parallel on a GPU using Julia, we can specify how many blocks and threads we want it to run on. For example, the GPU in my laptop has 65535 blocks and each block contains 1024 threads. I could use the GPU in my laptop to create a grid like the one above by telling my GPU to run a function on 16 blocks and 16 threads. If I try to run my function on more threads or blocks than my GPU has, an ```InexactError``` is thrown (somewhat cryptically) and my function fails to execute.
 
 # Host and Device
 
