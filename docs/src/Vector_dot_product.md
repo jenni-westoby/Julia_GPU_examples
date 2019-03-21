@@ -119,7 +119,7 @@ Fortunately the next three lines are conceptually a lot simpler:
 ```
 cacheIndex = threadIdx().x - 1
 totalThreads = blockDim().x * gridDim().x
-temp::Int64 = 0
+temp = 0
 ```
 
 ```cacheIndex``` is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for ```tid```. We set it to ```threadIdx().x - 1``` so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads. ```totalThreads``` is the product of the number of threads in each block (```blockDim().x```) and the number of blocks in the grid (```gridDim().x```). This is equal to the total number of threads we have deployed using ```@cuda```.
