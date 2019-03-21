@@ -1,4 +1,4 @@
-temp# Shared Memory and Synchronisation
+# Shared Memory and Synchronisation
 
 Following our example of vector addition in the previous section, you may be left wondering what the point of making a distinction between blocks and threads is. This section should make this clear.
 
