@@ -73,7 +73,7 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 end
 ```
 
-This is more complicated than the vector addition kernel, so let's work through it bit by bit. First of all, it is important to keep in mind that ```dot()``` (the kernel) function is intended to be called across multiple blocks AND threads. Below is the line in ```main()``` in which the kernel is called:
+This is more complicated than the vector addition kernel, so let's work through it bit by bit. First of all, it is important to keep in mind that ```dot()``` (the kernel) is intended to be called across multiple blocks AND threads. Below is the line in ```main()``` in which the kernel is called:
 
 ```
 @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
