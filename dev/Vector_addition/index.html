@@ -8,9 +8,9 @@
 end</code></pre><p>The function <code>add!()</code> takes three vectors (<code>a</code>, <code>b</code>  and <code>c</code>), adds each element of <code>a</code> and <code>b</code> together and stores the result in <code>c</code>.</p><p>We could call <code>add!()</code> in a Julia script like this:</p><pre><code class="language-none">function main()
 
     # Make three vectors
-    a = Vector{Any}(fill(undef, 10))
-    b = Vector{Any}(fill(undef, 10))
-    c = Vector{Any}(fill(undef, 10))
+    a = Vector{Any}(fill(0, 10))
+    b = Vector{Any}(fill(0, 10))
+    c = Vector{Any}(fill(0, 10))
 
     # Fill a and b with values
     for i in 1:10
