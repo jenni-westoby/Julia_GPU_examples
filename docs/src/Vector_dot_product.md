@@ -37,13 +37,14 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
     # Initialise some variables.
     tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
+    maxThreads = blockDim().x * gridDim().x
     cacheIndex = threadIdx().x - 1
     temp::Int64 = 0
 
     # Iterate over vector to do dot product in parallel way
     while tid < N
         temp += a[tid + 1] * b[tid + 1]
-        tid += blockDim().x * gridDim().x
+        tid += maxThreads
     end
 
     # set cache values
@@ -53,7 +54,7 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     sync_threads()
 
     # In the step below, we add up all of the values stored in the cache
-    i::Int = blockDim().x/2
+    i::Int = blockDim().x ÷ 2
     while i!=0
         if cacheIndex < i
             cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
@@ -72,7 +73,7 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 end
 ```
 
-This is more complicated than the vector addition kernel, so let's work through it bit by bit. Let's start by focusing on the lines below:
+This is more complicated than the vector addition kernel, so let's work through it bit by bit. First of all, it is important to keep in mind that the function will be called by each kernel that we use. Each kernel will be calculating the product of a subset of the elements in the vectors before summation. However, we should not get ahead of ourselves, so we start by disecting this function by focusing on the lines below:
 
 ```
 function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
@@ -96,22 +97,23 @@ So now we have an array of size ```threadsPerBlock``` in shared memory which we 
 tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
 ```
 
-This is the first time we've mixed up thread and block indexes in the same kernel! So what's going on?
+This is the first time we have mixed up thread and block indexes in the same kernel! So what is going on?
 
-The aim of this line of code is to generate a unique thread index for each thread. ```threadIdx().x``` gives the index for the current thread inside the current block. So ```threadIdx().x``` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so ```threadIdx().x = 1```), a second thread with the index 2 (```threadIdx().x = 2```) and so on, so we need a different approach to generate a unique thread index. ```blockDim().x``` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index minus one (```blockIdx().x - 1```) and the number of threads in a block (```blockDim().x```), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (```threadIdx().x```) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.
+The aim of this line of code is to generate a unique thread index for each thread. ```threadIdx().x``` gives the index for the current thread inside the current block. So ```threadIdx().x``` is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so ```threadIdx().x = 1```), a second thread with the index 2 (```threadIdx().x = 2```) and so on, so we need a different approach to generate a unique thread index. ```blockDim().x``` gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index minus one (```blockIdx().x - 1```) and the number of threads in a block (```blockDim().x```), we obtain the total number of threads in all blocks before the one we are currently in. Then we add the thread index (```threadIdx().x```) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.
 
 ![](images/GPU_tid.png)
 
 A final thing to note is that we subtract one from ```threadIdx().x``` and ```blockIdx().x```. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do you best to ignore them.
 
-Fortunately the next two lines are conceptually a lot simpler:
+Fortunately the next three lines are conceptually a lot simpler:
 
 ```
 cacheIndex = threadIdx().x - 1
+maxThreads = blockDim().x * gridDim().x
 temp::Int64 = 0
 ```
 
-```cacheIndex``` is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for ```tid```. We set it to ```threadIdx().x - 1``` so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads.
+```cacheIndex``` is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for ```tid```. We set it to ```threadIdx().x - 1``` so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads. ```maxThreads``` is the maximum number of threads that we can run on the specific GPU.
 
 Now we are ready to start calculating the dot product:
 
@@ -119,11 +121,11 @@ Now we are ready to start calculating the dot product:
 # Iterate over vector to do dot product in parallel way
 while tid < N
     temp += a[tid + 1] * b[tid + 1]
-    tid += blockDim().x * gridDim().x
+    tid += maxTrheads
 end
 ```
 
-For context, ```N``` is the number of elements in ```a``` (which is the same as the number of elements in ```b```). So while ```tid``` less than the number of elements in ```a```, we increment the value of ```temp`` by the product of ```a[tid + 1]``` and ```b[tid + 1]``` - this is the core operation in a vector dot product. Then, we increment ```tid``` by the number of threads in a block (```blockDim().x```) multiplied by the number of blocks in a grid (```gridDim().x```), which is the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.
+For context, ```N``` is the number of elements in ```a``` (which is the same as the number of elements in ```b```). So while ```tid``` less than the number of elements in ```a```, we increment the value of ```temp``` by the product of ```a[tid + 1]``` and ```b[tid + 1]``` - this is the core operation in a vector dot product. Then, we increment ```tid``` by the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.
 
 After exiting the while loop, we write the value calculated in temp to shared memory:
 
@@ -138,7 +140,7 @@ In the next step of the kernel, we want to sum up all the values stored in share
 cache[cacheIndex + 1] = temp
 ```
 
-Doesn't mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:
+Does not mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:
 
 ```
 # synchronise threads
@@ -151,7 +153,7 @@ Now all the threads have written to shared memory, we are ready to sum the eleme
 
 ```
 # In the step below, we add up all of the values stored in the cache
-i::Int = blockDim().x/2
+i::Int = blockDim().x ÷ 2
 while i!=0
     if cacheIndex < i
         cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
@@ -176,7 +178,7 @@ return nothing
 end
 ```
 
-And that's it! We have made it through the kernel. Now all we have to do is run the kernel on a GPU:
+And that is it! We have made it through the kernel. Now all we have to do is run the kernel on a GPU:
 
 ```
 function main()
