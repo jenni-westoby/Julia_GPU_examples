@@ -6,13 +6,14 @@
 
     # Initialise some variables.
     tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
+    maxThreads = blockDim().x * gridDim().x
     cacheIndex = threadIdx().x - 1
     temp::Int64 = 0
 
     # Iterate over vector to do dot product in parallel way
     while tid &lt; N
         temp += a[tid + 1] * b[tid + 1]
-        tid += blockDim().x * gridDim().x
+        tid += maxThreads
     end
 
     # set cache values
@@ -22,7 +23,7 @@
     sync_threads()
 
     # In the step below, we add up all of the values stored in the cache
-    i::Int = blockDim().x/2
+    i::Int = blockDim().x ÷ 2
     while i!=0
         if cacheIndex &lt; i
             cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
@@ -38,19 +39,20 @@
     end
 
     return nothing
-end</code></pre><p>This is more complicated than the vector addition kernel, so let&#39;s work through it bit by bit. Let&#39;s start by focusing on the lines below:</p><pre><code class="language-none">function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
+end</code></pre><p>This is more complicated than the vector addition kernel, so let&#39;s work through it bit by bit. First of all, it is important to keep in mind that the function will be called by each kernel that we use. Each kernel will be calculating the product of a subset of the elements in the vectors before summation. However, we should not get ahead of ourselves, so we start by disecting this function by focusing on the lines below:</p><pre><code class="language-none">function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
     # Set up shared memory cache for this current block.
     cache = @cuDynamicSharedMem(Int64, threadsPerBlock)</code></pre><p>Here, we are setting a variable called <code>cache</code> to the output of a function call to <code>@cuDynamicSharedMem</code>. As the comment suggests, this is required to create a cache of shared memory that can be accessed by all the threads in the current block. <code>@cuDynamicSharedMem</code> is a function from CUDAnative which allocates an array in dynamic shared memory on the GPU. The first argument specifies the type of elements in the array and the second argument specifies the dimensions of the array. So</p><pre><code class="language-none">cache = @cuDynamicSharedMem(Int64, threadsPerBlock)</code></pre><p>allocates an array in shared memory with the dimensions <code>threadsPerBlock</code>, where each element in the array is of type <code>Int64</code>.</p><p>So now we have an array of size <code>threadsPerBlock</code> in shared memory which we can fill with <code>Int64</code>s. Next we set the value of the thread index (<code>tid</code>):</p><pre><code class="language-none"># Initialise some variables.
-tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x</code></pre><p>This is the first time we&#39;ve mixed up thread and block indexes in the same kernel! So what&#39;s going on?</p><p>The aim of this line of code is to generate a unique thread index for each thread. <code>threadIdx().x</code> gives the index for the current thread inside the current block. So <code>threadIdx().x</code> is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so <code>threadIdx().x = 1</code>), a second thread with the index 2 (<code>threadIdx().x = 2</code>) and so on, so we need a different approach to generate a unique thread index. <code>blockDim().x</code> gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index minus one (<code>blockIdx().x - 1</code>) and the number of threads in a block (<code>blockDim().x</code>), we count the threads in all the blocks before the one we are currently in. Then we add the thread index (<code>threadIdx().x</code>) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.</p><p><img src="../images/GPU_tid.png" alt/></p><p>A final thing to note is that we subtract one from <code>threadIdx().x</code> and <code>blockIdx().x</code>. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do you best to ignore them.</p><p>Fortunately the next two lines are conceptually a lot simpler:</p><pre><code class="language-none">cacheIndex = threadIdx().x - 1
-temp::Int64 = 0</code></pre><p><code>cacheIndex</code> is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for <code>tid</code>. We set it to <code>threadIdx().x - 1</code> so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads.</p><p>Now we are ready to start calculating the dot product:</p><pre><code class="language-none"># Iterate over vector to do dot product in parallel way
+tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x</code></pre><p>This is the first time we have mixed up thread and block indexes in the same kernel! So what is going on?</p><p>The aim of this line of code is to generate a unique thread index for each thread. <code>threadIdx().x</code> gives the index for the current thread inside the current block. So <code>threadIdx().x</code> is not sufficient by itself because we are launching the kernel over multiple blocks. Each block has a thread with the index 1 (so <code>threadIdx().x = 1</code>), a second thread with the index 2 (<code>threadIdx().x = 2</code>) and so on, so we need a different approach to generate a unique thread index. <code>blockDim().x</code> gives number of threads in a block, which is the same for each block in a GPU. By multiplying the block index minus one (<code>blockIdx().x - 1</code>) and the number of threads in a block (<code>blockDim().x</code>), we obtain the total number of threads in all blocks before the one we are currently in. Then we add the thread index (<code>threadIdx().x</code>) in the current block to this total, thus generating a unique thread index for each thread across all blocks. This approach is illustrated below.</p><p><img src="../images/GPU_tid.png" alt/></p><p>A final thing to note is that we subtract one from <code>threadIdx().x</code> and <code>blockIdx().x</code>. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do you best to ignore them.</p><p>Fortunately the next three lines are conceptually a lot simpler:</p><pre><code class="language-none">cacheIndex = threadIdx().x - 1
+maxThreads = blockDim().x * gridDim().x
+temp::Int64 = 0</code></pre><p><code>cacheIndex</code> is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for <code>tid</code>. We set it to <code>threadIdx().x - 1</code> so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads. <code>maxThreads</code> is the maximum number of threads that we can run on the specific GPU.</p><p>Now we are ready to start calculating the dot product:</p><pre><code class="language-none"># Iterate over vector to do dot product in parallel way
 while tid &lt; N
     temp += a[tid + 1] * b[tid + 1]
-    tid += blockDim().x * gridDim().x
-end</code></pre><p>For context, <code>N</code> is the number of elements in <code>a</code> (which is the same as the number of elements in <code>b</code>). So while <code>tid</code> less than the number of elements in <code>a</code>, we increment the value of <code>temp`` by the product of</code>a[tid + 1]<code>and</code>b[tid + 1]<code>- this is the core operation in a vector dot product. Then, we increment</code>tid<code>by the number of threads in a block (</code>blockDim().x<code>) multiplied by the number of blocks in a grid (</code>gridDim().x```), which is the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.</p><p>After exiting the while loop, we write the value calculated in temp to shared memory:</p><pre><code class="language-none"># set cache values
-cache[cacheIndex + 1] = temp</code></pre><p>In the next step of the kernel, we want to sum up all the values stored in shared memory. We do this by finding the sum of all the elements in <code>cache</code>. But remember that each thread is running asynchronously - just because one thread has finished executing the line:</p><pre><code class="language-none">cache[cacheIndex + 1] = temp</code></pre><p>Doesn&#39;t mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:</p><pre><code class="language-none"># synchronise threads
+    tid += maxTrheads
+end</code></pre><p>For context, <code>N</code> is the number of elements in <code>a</code> (which is the same as the number of elements in <code>b</code>). So while <code>tid</code> less than the number of elements in <code>a</code>, we increment the value of <code>temp</code> by the product of <code>a[tid + 1]</code> and <code>b[tid + 1]</code> - this is the core operation in a vector dot product. Then, we increment <code>tid</code> by the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.</p><p>After exiting the while loop, we write the value calculated in temp to shared memory:</p><pre><code class="language-none"># set cache values
+cache[cacheIndex + 1] = temp</code></pre><p>In the next step of the kernel, we want to sum up all the values stored in shared memory. We do this by finding the sum of all the elements in <code>cache</code>. But remember that each thread is running asynchronously - just because one thread has finished executing the line:</p><pre><code class="language-none">cache[cacheIndex + 1] = temp</code></pre><p>Does not mean that all threads have executed that line. To avoid trying to sum the elements of cache before they have all been written, we need to make the threads all pause and wait until every thread has reached the same line in the kernel. Fortunately, such a function exists as part of CUDAnative:</p><pre><code class="language-none"># synchronise threads
 sync_threads()</code></pre><p>When each thread reaches this line, it pauses in its execution of the kernel until all of the threads in that block have reached the same place. Then, the threads restart again.</p><p>Now all the threads have written to shared memory, we are ready to sum the elements of cache:</p><pre><code class="language-none"># In the step below, we add up all of the values stored in the cache
-i::Int = blockDim().x/2
+i::Int = blockDim().x ÷ 2
 while i!=0
     if cacheIndex &lt; i
         cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
@@ -64,7 +66,7 @@ if cacheIndex == 0
 end
 
 return nothing
-end</code></pre><p>And that&#39;s it! We have made it through the kernel. Now all we have to do is run the kernel on a GPU:</p><pre><code class="language-none">function main()
+end</code></pre><p>And that is it! We have made it through the kernel. Now all we have to do is run the kernel on a GPU:</p><pre><code class="language-none">function main()
 
     # Initialise variables
     N::Int64 = 33 * 1024
