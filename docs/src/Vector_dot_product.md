@@ -6,7 +6,7 @@ You may recall from "Some Background on GPUs" that GPUs are composed of grids of
 
 ![](images/grid_threads_blocks.png)
 
-In addition to threads, each block contains 'shared memory'. Shared memory is memory which can be read and written to by all the threads in a given block. Shared memory can't be accessed by threads not in the specified block. This is illustrated in the diagram below.
+In addition to threads, each block contains __shared memory__. Shared memory is memory which can be read and written to by all the threads in a given block. Shared memory cannot be accessed by threads not in the specified block. This is illustrated in the diagram below.
 
 ![](images/gpu_memory_layout.png)
 
@@ -27,7 +27,7 @@ As before, we begin our script by loading the Julia packages we need to write GP
 using CuArrays, CUDAnative, CUDAdrv
 ```
 
-Next, we need to write the kernel. It is a lot to take in, but don't worry, we will go through it step by step.
+Next, we need to write the kernel. It is a lot to take in, but do not worry, we will go through it step by step.
 
 ```
 function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
