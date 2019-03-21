@@ -38,7 +38,7 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     # Initialise some variables.
     tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
     cacheIndex = threadIdx().x - 1
-    temp::Int64 = 0
+    temp = 0
 
     # Iterate over vector to do dot product in parallel way
     while tid < N
