@@ -61,7 +61,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Some Background on GPUs",
     "title": "Kernel",
     "category": "section",
-    "text": "A common way to organise code that will run on a GPU is to write a function that will execute on the GPU. This function is typically called after all the data required by the function has been copied from host (CPU) to device (GPU). Because the function is typically executed thousands of times in parallel, the function that will execute on the GPU is given the special name of \'kernel\'. "
+    "text": "A common way to organise code that will run on a GPU is to write a function that will execute on the GPU. This function is typically called after all the data required by the function has been copied from host (CPU) to device (GPU). Because the function is typically executed thousands of times in parallel, the function that will execute on the GPU is given the special name of \'kernel\'."
+},
+
+{
+    "location": "GPU_background/#CUDA-1",
+    "page": "Some Background on GPUs",
+    "title": "CUDA",
+    "category": "section",
+    "text": "We will refer a lot to CUDA in this tutorial, so what is it? The CUDA Architecture is the architecture used by NVIDIA\'s General Purpose GPUs (GPGPUs). To facilitate using GPUs with this architecture for general purpose computing, NVIDIA created CUDA C, a language closely based on C. They additionally created the CUDA toolkit, which is required to compile CUDA C code. Many of the functions in CUDAnative and CUDAdrv, two of the Julia packages covered in this tutorial, are highly analogous to functions in CUDA C. These packages depend upon the CUDA toolkit or libraries from it, and rely upon the GPU they are running on having a CUDA architecture.  "
 },
 
 {
@@ -214,6 +222,14 @@ var documenterSearchIndex = {"docs": [
     "title": "A Note on Static and Dynamic Allocation",
     "category": "section",
     "text": "In the first line of the kernel, we call @cuDynamicSharedMem. @cuDynamicSharedMem has a sister function, @cuStaticSharedMem. Like @cuDynamicSharedMem, @cuStaticSharedMem allocates arrays in shared memory. However unlike @cuDynamicSharedMem, @cuStaticSharedMem allocates arrays statically rather than dynamically. Memory that is statically allocated is allocated at compilation time, whereas memory that is dynamically allocated is allocated at program execution. We used @cuDynamicSharedMem in our example because one of the command line arguments for @cuDynamicSharedMem was a kernel command line argument (threadsPerBlock). Because the value of the kernel command line argument is not known at compilation time, dynamic rather than static memory allocation was required.A consequence of using dynamic rather than static memory allocation was that we had to specify how much memory @cuDynamicSharedMem would need in our @cuda call. Otherwise, there is no way @cuda could know the correct amount of shared memory to allocate in advance, since @cuDynamicSharedMem does not determine how much shared memory it will need until it runs."
+},
+
+{
+    "location": "Vector_dot_product/#A-Note-on-Types-1",
+    "page": "Shared Memory and Synchronisation",
+    "title": "A Note on Types",
+    "category": "section",
+    "text": "You may have noticed that we typed some of the variables in this example. One reason for this is that type conversions are forbidden on the kernel. If we need a variable to be a particular type for kernel execution, it is therefore often easiest to specify its type immediately on creation. We discuss this and other Julia specific GPU software concerns in Challenges in Julia GPU Software Development"
 },
 
 {
