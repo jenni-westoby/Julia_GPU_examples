@@ -1,3 +1,5 @@
+using Test
+
 function add!(a,b,c)
     local tid = 1
     while (tid <= min(length(a), length(b), length(c)))
@@ -8,15 +10,15 @@ end
 
 function main()
 
-    # make three vectors
-    a = Vector{Any}(fill(undef, 10))
-    b = Vector{Any}(fill(undef, 10))
-    c = Vector{Any}(fill(undef, 10))
+    # Make three vectors
+    a = Vector{Any}(fill(0, 10))
+    b = Vector{Any}(fill(0, 10))
+    c = Vector{Any}(fill(0, 10))
 
     # Fill a and b with values
     for i in 1:10
-        a[i] = -i
-        b[i] = i * i
+        a[i] = i
+        b[i] = i * 2
     end
 
     # Fill c with values
@@ -24,7 +26,7 @@ function main()
 
     # Do a sanity check
     for i in 1:length(a)
-        println(a[i], " + ", b[i], " = ", c[i])
+        @test a[i] + b[i] ≈ c[i]
     end
 end
 

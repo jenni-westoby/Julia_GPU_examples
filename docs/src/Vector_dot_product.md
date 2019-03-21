@@ -1,8 +1,8 @@
-# Shared Memory and Synchronisation
+temp# Shared Memory and Synchronisation
 
 Following our example of vector addition in the previous section, you may be left wondering what the point of making a distinction between blocks and threads is. This section should make this clear.
 
-You may recall from "Some Background on GPUs" that GPUs are composed of grids of blocks, where each block contains threads.
+You may recall from "Some Background on GPUs" that GPUs are composed of grids of blocks, where each block contains threads. In the drawing below, we have deployed a grid of 16 blocks each containing 16 threads (```@cuda threads = 16, blocks = 16```)
 
 ![](images/grid_threads_blocks.png)
 
@@ -37,14 +37,14 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
     # Initialise some variables.
     tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
-    maxThreads = blockDim().x * gridDim().x
+    totalThreads = blockDim().x * gridDim().x
     cacheIndex = threadIdx().x - 1
-    temp::Int64 = 0
+    temp = 0
 
     # Iterate over vector to do dot product in parallel way
     while tid < N
         temp += a[tid + 1] * b[tid + 1]
-        tid += maxThreads
+        tid += totalThreads
     end
 
     # set cache values
@@ -73,7 +73,16 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 end
 ```
 
-This is more complicated than the vector addition kernel, so let's work through it bit by bit. First of all, it is important to keep in mind that the function will be called by each kernel that we use. Each kernel will be calculating the product of a subset of the elements in the vectors before summation. However, we should not get ahead of ourselves, so we start by disecting this function by focusing on the lines below:
+This is more complicated than the vector addition kernel, so let's work through it bit by bit. First of all, it is important to keep in mind that ```dot()``` (the kernel) function is intended to be called across multiple blocks AND threads. Below is the line in ```main()``` in which the kernel is called:
+
+```
+@cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
+(threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
+```
+
+Note that we specify both a number of blocks (```blocksPerGrid```) and a number of threads (```threadsPerBlock```) on which the kernel will be executed. This means ```dot()``` will be executed on ```threadsPerBlock``` number of threads in ```blocksPerGrid``` number of blocks. For example, if ```threadsPerBlock = 10``` and ```blocksPerGrid = 10```, we would deploy 10 blocks each containing 10 threads and execute the ```dot()``` on each of those threads, meaning ```dot()``` would be executed 100 times in parallel. We also specify a value for a flag called ```shmem``` for the first time. ```shmem``` specifies the amount of shared memory that needs to be allocated in each block for ```dot()```, and will be discussed in more detail later in this section.
+
+Before we start dissecting the kernel line by line, it would be useful to get a brief overview of what it is doing. On each thread executing the kernel, the kernel begins by calculating the product of a subset of the elements in ```a``` and ```b``` and storing the results in an array in shared memory. In the second part of the kernel, the values in the array are summed. However, we should not get ahead of ourselves, so we will start dissecting this function by focusing on the lines below:
 
 ```
 function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
@@ -109,11 +118,11 @@ Fortunately the next three lines are conceptually a lot simpler:
 
 ```
 cacheIndex = threadIdx().x - 1
-maxThreads = blockDim().x * gridDim().x
+totalThreads = blockDim().x * gridDim().x
 temp::Int64 = 0
 ```
 
-```cacheIndex``` is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for ```tid```. We set it to ```threadIdx().x - 1``` so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads. ```maxThreads``` is the maximum number of threads that we can run on the specific GPU.
+```cacheIndex``` is the index we will use to write an element to the array of shared memory we created. Remember shared memory is only accessible within the current block, so we do not need to worry about making a unique index across blocks like we did for ```tid```. We set it to ```threadIdx().x - 1``` so that each thread is writing to a separate location in shared memory - otherwise threads could overwrite the results calculated by other threads. ```totalThreads``` is the product of the number of threads in each block (```blockDim().x```) and the number of blocks in the grid (```gridDim().x```). This is equal to the total number of threads we have deployed using ```@cuda```.
 
 Now we are ready to start calculating the dot product:
 
@@ -121,11 +130,11 @@ Now we are ready to start calculating the dot product:
 # Iterate over vector to do dot product in parallel way
 while tid < N
     temp += a[tid + 1] * b[tid + 1]
-    tid += maxTrheads
+    tid += totalThreads
 end
 ```
 
-For context, ```N``` is the number of elements in ```a``` (which is the same as the number of elements in ```b```). So while ```tid``` less than the number of elements in ```a```, we increment the value of ```temp``` by the product of ```a[tid + 1]``` and ```b[tid + 1]``` - this is the core operation in a vector dot product. Then, we increment ```tid``` by the total number of threads on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU.
+For context, ```N``` is the number of elements in ```a``` (which is the same as the number of elements in ```b```). So while ```tid``` is less than the number of elements in ```a```, we increment the value of ```temp``` by the product of ```a[tid + 1]``` and ```b[tid + 1]``` - this is the core operation in a vector dot product. Then, we increment ```tid``` by the total number of threads deployed on the GPU. This line enables us to carry out dot products for vectors which have more elements than the total number of threads on our GPU (ie. if ```N``` > ```totalThreads```).
 
 After exiting the while loop, we write the value calculated in temp to shared memory:
 

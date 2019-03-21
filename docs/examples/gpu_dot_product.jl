@@ -4,15 +4,18 @@ using CuArrays, CUDAnative, CUDAdrv
 # to the fact that ONE INDEXING SUCKS
 function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
-    # Set up shared memory cache for this current block.
+    # Set up shared memory cache for this current block. Has to be dynamic to be
+    # able to take command line args - this will not work with
+    # @cuStaticSharedMem
     cache = @cuDynamicSharedMem(Int64, threadsPerBlock)
 
-    # Initialise some variables.
+    # Initialise some variables. Minus ones are to get the indexing consistent
+    # with the C version
     tid = (threadIdx().x - 1) + (blockIdx().x - 1) * blockDim().x
     cacheIndex = threadIdx().x - 1
-    temp::Int64 = 0
+    temp = 0
 
-    # Iterate over vector to do dot product in parallel way
+    # iterate over vector to do dot product in parallel way
     while tid < N
         temp += a[tid + 1] * b[tid + 1]
         tid += blockDim().x * gridDim().x
@@ -25,8 +28,8 @@ function dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     sync_threads()
 
     # In the step below, we add up all of the values stored in the cache
-    i::Int = blockDim().x/2
-    while i!=0
+    i::Int = blockDim().x ÷ 2
+    while i>0
         if cacheIndex < i
             cache[cacheIndex + 1] += cache[cacheIndex + i + 1]
         end
@@ -51,7 +54,9 @@ end
 
 function main()
 
-    # Initialise variables
+    # Can't type global variables in Julia, which messes things up.
+    # So instead we locally define these and pass them explicitly as arguments to
+    # the kernel
     N::Int64 = 33 * 1024
     threadsPerBlock::Int64 = 256
     blocksPerGrid::Int64 = min(32, (N + threadsPerBlock - 1) / threadsPerBlock)
@@ -61,7 +66,7 @@ function main()
     b = CuArrays.CuArray(fill(0, N))
     c = CuArrays.CuArray(fill(0, blocksPerGrid))
 
-    # Fill a and b
+    # Fill and b
     for i in 1:N
         a[i] = i
         b[i] = 2*i
@@ -72,6 +77,8 @@ function main()
     @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
     (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
 
+    CUDAdrv.@profile @cuda blocks = blocksPerGrid threads = threadsPerBlock shmem =
+    (threadsPerBlock * sizeof(Int64)) dot(a,b,c, N, threadsPerBlock, blocksPerGrid)
     # Copy c back from the gpu (device) to the host
     c = Array(c)
 
