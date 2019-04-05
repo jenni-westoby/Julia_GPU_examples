@@ -5,7 +5,7 @@
         c[tid] = a[tid] + b[tid]
         tid += 1
     end
-end</code></pre><p>The function <code>add!()</code> takes three vectors (<code>a</code>, <code>b</code>  and <code>c</code>), adds each element of <code>a</code> and <code>b</code> together and stores the result in <code>c</code>.</p><p>We could call <code>add!()</code> in a Julia script like this:</p><pre><code class="language-none">function main()
+end</code></pre><p>The function <code>add!()</code> takes three vectors (<code>a</code>, <code>b</code>  and <code>c</code>), adds each element of <code>a</code> and <code>b</code> together and stores the result in <code>c</code>. If you are not very familiar with Julia, you may be surprised that <code>add!()</code> doesn&#39;t return anything and has an exclamation mark in the function name. This is because functions in Julia can mutate their arguments. It is a stylistic convention in Julia that mutating functions have a function name that ends with an exclamation mark.</p><p>We could call <code>add!()</code> in a Julia script like this:</p><pre><code class="language-none">function main()
 
     # Make three vectors
     a = Vector{Any}(fill(0, 10))
@@ -27,7 +27,7 @@ end</code></pre><p>The function <code>add!()</code> takes three vectors (<code>a
     end
 end
 
-main()</code></pre><p><code>main()</code> is a very simple function that makes three vectors, <code>a</code>, <code>b</code> and <code>c</code>. It populates <code>a</code> and <code>b</code> with values, calls <code>add!()</code> to add each value in <code>a</code> and <code>b</code> together, then runs a for loop to check that the values stored in <code>c</code> make sense.</p><h1><a class="nav-anchor" id="Adding-Vectors-on-a-GPU-1" href="#Adding-Vectors-on-a-GPU-1">Adding Vectors on a GPU</a></h1><p>As exciting as the example above was, the eagle eyed reader may have noticed that it does not actually run on a GPU. We can fix that.</p><p>The first thing we need to do is load packages that will enable us to run Julia code on GPUs.</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv</code></pre><p><a href="https://juliaobserver.com/packages/CuArrays">CuArrays</a> is a package that allows us to easily transfer arrays from CPU to GPU. <a href="https://juliaobserver.com/packages/CUDAnative">CUDAnative</a> allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call <a href="https://juliaobserver.com/packages/CUDAdrv">CUDAdrv</a> in our example, but much of CUDAnative depends on CUDAdrv to work.</p><p>Next, we need to identify what part of our example could benefit from being ported to GPU. Since most of the actual work is being done in <code>add!()</code>, this is an obvious target. Let&#39;s modify <code>add!()</code> so that it could be executed on a GPU.</p><pre><code class="language-none">function add!(a,b,c)
+main()</code></pre><p><code>main()</code> is a very simple function that makes three vectors, <code>a</code>, <code>b</code> and <code>c</code>. It populates <code>a</code> and <code>b</code> with values, calls <code>add!()</code> to add each value in <code>a</code> and <code>b</code> together, then runs a for loop to check that the values stored in <code>c</code> make sense. Note that when checking the values of <code>c[i]</code> are correct, we use <code>≈</code> not <code>=</code> because we are comparing floats.</p><h1><a class="nav-anchor" id="Adding-Vectors-on-a-GPU-1" href="#Adding-Vectors-on-a-GPU-1">Adding Vectors on a GPU</a></h1><p>As exciting as the example above was, the eagle eyed reader may have noticed that it does not actually run on a GPU. We can fix that.</p><p>The first thing we need to do is load packages that will enable us to run Julia code on GPUs.</p><pre><code class="language-none">using CuArrays, CUDAnative, CUDAdrv</code></pre><p><a href="https://juliaobserver.com/packages/CuArrays">CuArrays</a> is a package that allows us to easily transfer arrays from CPU to GPU. <a href="https://juliaobserver.com/packages/CUDAnative">CUDAnative</a> allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call <a href="https://juliaobserver.com/packages/CUDAdrv">CUDAdrv</a> in our example, but much of CUDAnative depends on CUDAdrv to work.</p><p>Next, we need to identify what part of our example could benefit from being ported to GPU. Since most of the actual work is being done in <code>add!()</code>, this is an obvious target. Let&#39;s modify <code>add!()</code> so that it could be executed on a GPU.</p><pre><code class="language-none">function add!(a,b,c)
     local tid = 1
     while (tid &lt;= min(length(a), length(b), length(c)))
         c[tid] = a[tid] + b[tid]
@@ -90,7 +90,7 @@ main()</code></pre><p>Note that in both versions of <code>main()</code>, the san
 
     # Fill a and b with values
     for i in 1:10
-        a[i] = -i
+        a[i] = i
         b[i] = i * i
     end
 
@@ -131,7 +131,7 @@ function main()
 
     # Fill a and b with values
     for i in 1:10
-        a[i] = -i
+        a[i] = i
         b[i] = i * i
     end
 
