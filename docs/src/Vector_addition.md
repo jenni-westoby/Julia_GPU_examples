@@ -16,7 +16,7 @@ function add!(a,b,c)
 end
 ```
 
-The function ```add!()``` takes three vectors (```a```, ```b```  and ```c```), adds each element of ```a``` and ```b``` together and stores the result in ```c```.
+The function ```add!()``` takes three vectors (```a```, ```b```  and ```c```), adds each element of ```a``` and ```b``` together and stores the result in ```c```. If you are not very familiar with Julia, you may be surprised that ```add!()``` doesn't return anything and has an exclamation mark in the function name. This is because functions in Julia can mutate their arguments. It is a stylistic convention in Julia that mutating functions have a function name that ends with an exclamation mark.
 
 We could call ```add!()``` in a Julia script like this:
 
@@ -46,7 +46,7 @@ end
 main()
 ```
 
-```main()``` is a very simple function that makes three vectors, ```a```, ```b``` and ```c```. It populates ```a``` and ```b``` with values, calls ```add!()``` to add each value in ```a``` and ```b``` together, then runs a for loop to check that the values stored in ```c``` make sense.
+```main()``` is a very simple function that makes three vectors, ```a```, ```b``` and ```c```. It populates ```a``` and ```b``` with values, calls ```add!()``` to add each value in ```a``` and ```b``` together, then runs a for loop to check that the values stored in ```c``` make sense. Note that when checking the values of ```c[i]``` are correct, we use ```≈``` not ```=``` because we are comparing floats.
 
 # Adding Vectors on a GPU
 
@@ -192,7 +192,7 @@ function main()
 
     # Fill a and b with values
     for i in 1:10
-        a[i] = -i
+        a[i] = i
         b[i] = i * i
     end
 
@@ -294,7 +294,7 @@ function main()
 
     # Fill a and b with values
     for i in 1:10
-        a[i] = -i
+        a[i] = i
         b[i] = i * i
     end
 
