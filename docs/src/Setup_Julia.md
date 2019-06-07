@@ -16,7 +16,9 @@ Assuming you did follow the instructions in "Accessing GPUs" and you have access
 ```
 ]
 add CUDAdrv
+build CUDAdrv
 add CUDAnative
+build CUDAnative
 add CuArrays
 ```
 
