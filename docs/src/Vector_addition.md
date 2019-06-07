@@ -55,7 +55,7 @@ As exciting as the example above was, the eagle eyed reader may have noticed tha
 The first thing we need to do is load packages that will enable us to run Julia code on GPUs.
 
 ```
-using CuArrays, CUDAnative, CUDAdrv
+using CuArrays, CUDAnative, CUDAdrv, Test
 ```
 
 [CuArrays](https://juliaobserver.com/packages/CuArrays) is a package that allows us to easily transfer arrays from CPU to GPU. [CUDAnative](https://juliaobserver.com/packages/CUDAnative) allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call [CUDAdrv](https://juliaobserver.com/packages/CUDAdrv) in our example, but much of CUDAnative depends on CUDAdrv to work.
@@ -193,7 +193,7 @@ function main()
     # Fill a and b with values
     for i in 1:10
         a[i] = i
-        b[i] = i * i
+        b[i] = i * 2
     end
 
     # Execute the kernel
@@ -277,6 +277,8 @@ tid = blockIdx().x
 And now our code parallelises over blocks rather than threads! The complete script to parallelise over blocks is below:
 
 ```
+using CuArrays, CUDAnative, CUDAdrv, Test
+
 function add!(a,b,c)
     tid = blockIdx().x
     if (tid <= min(length(a), length(b), length(c)))
@@ -295,7 +297,7 @@ function main()
     # Fill a and b with values
     for i in 1:10
         a[i] = i
-        b[i] = i * i
+        b[i] = i * 2
     end
 
     # Execute the kernel
