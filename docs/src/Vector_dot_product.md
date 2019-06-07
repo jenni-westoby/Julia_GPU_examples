@@ -112,7 +112,7 @@ The aim of this line of code is to generate a unique thread index for each threa
 
 ![](images/GPU_tid.png)
 
-A final thing to note is that we subtract one from ```threadIdx().x``` and ```blockIdx().x```. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do you best to ignore them.
+A final thing to note is that we subtract one from ```threadIdx().x``` and ```blockIdx().x```. This is because Julia is tragically a one indexed programming language. You will notice a lot of plus and minus ones in this example, they are all there for this reason and whilst you are getting your head around the core concepts you should do your best to ignore them.
 
 Fortunately the next three lines are conceptually a lot simpler:
 
