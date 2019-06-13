@@ -172,7 +172,7 @@ while i!=0
 end
 ```
 
-Here, we initialise ```i``` as half of the total number of threads in a block. In the first iteration of the while loop, if ```cacheIndex``` is less than this number, we add the value stored at ```cache[cacheIndex + i + 1]``` to the value of ```cache[cacheIndex + 1]```. Then we synchronise the threads again, divide ```i``` by two and enter the second while loop iteration. If you work through this conceptually, you should see that provided the number of threads in a block is an even number, eventually the value at ```cache[1]``` will be equal to the sum of all the elements in ```cache```.
+Here, we initialise ```i``` as half of the total number of threads in a block. In the first iteration of the while loop, if ```cacheIndex``` is less than this number, we add the value stored at ```cache[cacheIndex + i + 1]``` to the value of ```cache[cacheIndex + 1]```. Then we synchronise the threads again, divide ```i``` by two and enter the second while loop iteration. If you work through this conceptually, you should see that provided the number of threads in a block is a power of 2 (ie. can be expressed as 2^n), eventually the value at ```cache[1]``` will be equal to the sum of all the elements in ```cache```.
 
 Now we need to write the value of ```cache[1]``` to ```c``` (remember that we can not directly return the value of ```cache[1]``` due to the requirement that the kernel must always return ```nothing```).
 
