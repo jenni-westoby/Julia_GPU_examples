@@ -55,7 +55,7 @@ As exciting as the example above was, the eagle eyed reader may have noticed tha
 The first thing we need to do is load packages that will enable us to run Julia code on GPUs.
 
 ```
-using CuArrays, CUDAnative, CUDAdrv, Test
+using CUDA, Test
 ```
 
 [CuArrays](https://juliaobserver.com/packages/CuArrays) is a package that allows us to easily transfer arrays from CPU to GPU. [CUDAnative](https://juliaobserver.com/packages/CUDAnative) allows us to write relatively high level code for executing functions on GPUs. We will not explicitly call [CUDAdrv](https://juliaobserver.com/packages/CUDAdrv) in our example, but much of CUDAnative depends on CUDAdrv to work.
@@ -90,9 +90,9 @@ Let's see how ```main()``` has changed in the GPU version of our example.
 function main()
 
     # Make three CuArrays
-    a = CuArrays.CuArray(fill(0, 10))
-    b = CuArrays.CuArray(fill(0, 10))
-    c = CuArrays.CuArray(fill(0, 10))
+    a = CuArray(fill(0, 10))
+    b = CuArray(fill(0, 10))
+    c = CuArray(fill(0, 10))
 
     # Fill a and b with values
     for i in 1:10
@@ -123,9 +123,9 @@ main()
 function main()
 
     # Make three CuArrays
-    a = CuArrays.CuArray(fill(0, 10))
-    b = CuArrays.CuArray(fill(0, 10))
-    c = CuArrays.CuArray(fill(0, 10))
+    a = CuArray(fill(0, 10))
+    b = CuArray(fill(0, 10))
+    c = CuArray(fill(0, 10))
 ```
 
 Like in the CPU version of main, we start by making three arrays. However here, instead of making three standard Julia arrays, we make three CuArrays. CuArrays are GPU compatible arrays. For reasons we will gloss over here, ordinary Julia arrays would not work in our example. Fortunately, CuArrays are a subtype of [AbstractArrays](https://docs.julialang.org/en/v1/base/arrays/index.html) and can often be treated exactly the same way as a normal AbstractArray. Many standard array operations work out of the box on CuArrays, you can find a list [here](https://github.com/JuliaGPU/CuArrays.jl). If you are curious why we cannot use a normal AbstractArray or Array here, see the upcoming chapter [Challenges in Julia GPU Software Development](Challenges.md) for details.
@@ -186,9 +186,9 @@ Let's see how ```main()``` changes when we run the kernel over multiple threads:
 function main()
 
     # Make three CuArrays
-    a = CuArrays.CuArray(fill(0, 10))
-    b = CuArrays.CuArray(fill(0, 10))
-    c = CuArrays.CuArray(fill(0, 10))
+    a = CuArray(fill(0, 10))
+    b = CuArray(fill(0, 10))
+    c = CuArray(fill(0, 10))
 
     # Fill a and b with values
     for i in 1:10
@@ -290,9 +290,9 @@ end
 function main()
 
     # Make three CuArrays
-    a = CuArrays.CuArray(fill(0, 10))
-    b = CuArrays.CuArray(fill(0, 10))
-    c = CuArrays.CuArray(fill(0, 10))
+    a = CuArray(fill(0, 10))
+    b = CuArray(fill(0, 10))
+    c = CuArray(fill(0, 10))
 
     # Fill a and b with values
     for i in 1:10
